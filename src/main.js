@@ -1,0 +1,754 @@
+// Pitchside Displays — storefront, customizer, checkout and admin mockup.
+// Implemented from the "Pitchside Displays.dc.html" Claude Design export as a
+// plain state -> render() -> DOM loop, no framework.
+
+const CURRENCIES = [
+  { code: 'USD', sym: '$', price: 350, ship: 35 },
+  { code: 'EUR', sym: '€', price: 335, ship: 55 },
+  { code: 'GBP', sym: '£', price: 285, ship: 48 },
+];
+
+const FORMATIONS = { '4-3-3': [3, 3, 4, 1] };
+
+const TEAM_OPTIONS = [
+  'Team name here', 'Manchester United FC', 'Real Madrid CF', 'FC Barcelona', 'Arsenal FC',
+  'Liverpool FC', 'Chelsea FC', 'FC Bayern München', 'Paris Saint-Germain', 'AC Milan',
+  'Inter Milan', 'Borussia Dortmund', 'Ajax Amsterdam', 'Another club — tell us',
+];
+
+const STADIUM_OPTIONS = [
+  'Stadium name here', 'Old Trafford', 'Santiago Bernabéu', 'Spotify Camp Nou', 'Emirates Stadium',
+  'Anfield', 'Stamford Bridge', 'Allianz Arena', 'Parc des Princes', 'San Siro',
+  'Signal Iduna Park', 'Johan Cruijff Arena', 'Another stadium — tell us',
+];
+
+const SPECS = [
+  { k: 'Outer size', v: '22 in × 30 in' }, { k: 'Slab slots', v: '11' },
+  { k: 'Default layout', v: '4-3-3 formation' }, { k: 'Fits', v: 'PSA / ACE / same-size slabs' },
+  { k: 'Front', v: 'UV-protected acrylic, hinged' }, { k: 'Boxed weight', v: '~12 lb' },
+];
+
+const STEPS = [
+  { n: '01', t: 'Pick your club', d: 'Any club, any era. We source the stadium print to match.' },
+  { n: '02', t: 'Set the formation', d: '4-3-3 as standard, or tell us how you want the eleven arranged.' },
+  { n: '03', t: 'Add the details', d: 'Tifos, flags, player names under each slot, a season on the header.' },
+  { n: '04', t: 'We build and ship', d: 'Approval mockup first, then a 4–6 week build and tracked delivery.' },
+];
+
+const FAQS = [
+  { q: 'What slabs fit?', a: 'PSA and ACE cases, plus anything the same footprint. Slots hold them without tape or glue.' },
+  { q: 'Can I change the cards later?', a: 'Yes. The front is hinged, so you swap slabs without dismantling anything.' },
+  { q: 'Which clubs can you do?', a: 'Any club we can get a clean stadium image for. Ask us about national teams too.' },
+  { q: 'How long does it take?', a: 'Roughly four to six weeks from approval, depending on the batch.' },
+  { q: 'Where do you ship?', a: 'Everything ships from the USA, worldwide on request. Tracked with UPS.' },
+];
+
+const CHECKOUT_FIELDS = [
+  { label: 'Full name', ph: 'Your name', full: true }, { label: 'Email', ph: 'you@example.com', full: false },
+  { label: 'Phone', ph: '(555) 123-4567', full: false }, { label: 'Address', ph: 'Street and number', full: true },
+  { label: 'City', ph: 'Chicago', full: false }, { label: 'State / ZIP', ph: 'IL 60601', full: false },
+  { label: 'Country', ph: 'United States', full: true },
+];
+
+const PAY_METHODS = [
+  { name: 'Card', note: 'Visa, Mastercard, Amex — via Shopify Payments' },
+  { name: 'Shop Pay', note: 'Pay in 4 interest-free installments' },
+  { name: 'PayPal', note: 'Buyer protection included' },
+  { name: 'Apple Pay / Google Pay', note: 'One-tap on mobile' },
+];
+
+const ORDERS = [
+  { ref: 'PSD-114', name: 'J. Whitfield', place: 'Chicago, IL', build: 'Man United · Old Trafford · 4-3-3', status: 'New', total: '$350' },
+  { ref: 'PSD-113', name: 'M. Rossi', place: 'Newark, NJ', build: 'AC Milan · San Siro · 4-4-2', status: 'In build', total: '$350' },
+  { ref: 'PSD-112', name: 'A. Keller', place: 'Austin, TX', build: 'Bayern · Allianz Arena · 4-3-3', status: 'In build', total: '$350' },
+  { ref: 'PSD-111', name: 'J. Moreau', place: 'Lyon, FR', build: 'PSG · Parc des Princes · 3-5-2', status: 'Approval', total: '€335' },
+  { ref: 'PSD-110', name: 'S. Ahmed', place: 'London, UK', build: 'Arsenal · Emirates · 4-3-3', status: 'Shipped', total: '£285' },
+  { ref: 'PSD-109', name: 'D. Ortiz', place: 'Miami, FL', build: 'Real Madrid · Bernabéu · 4-3-3', status: 'Shipped', total: '$350' },
+];
+
+const STATUS_COLORS = {
+  New: ['#eef3ef', '#1f6b4f'],
+  'In build': ['#f4f1e7', '#8a6d1f'],
+  Approval: ['#f1f0f5', '#4a4a63'],
+  Shipped: ['#f0f0ef', 'rgba(0,0,0,.5)'],
+};
+
+// Product photography isn't available in this repo (the Claude Design export
+// only carries labels, not the underlying images) — placeholders stand in
+// until real photos land in public/images. See design/README.md.
+const SHOT_LABELS = [
+  'Hinged front, eleven slots ready',
+  'Mounted on a mantel, 4-3-3',
+  'Door open for swapping slabs',
+  'Front three only',
+  'Closed, empty stadium print',
+  'Frame depth and hinge',
+];
+const SHOT_HUES = [162, 205, 24, 280, 48, 340];
+
+function placeholderShot(i) {
+  const hue = SHOT_HUES[i % SHOT_HUES.length];
+  const label = SHOT_LABELS[i];
+  const svg = `<svg xmlns="http://www.w3.org/2000/svg" width="600" height="750">
+    <rect width="100%" height="100%" fill="hsl(${hue},24%,88%)"/>
+    <text x="50%" y="50%" font-family="sans-serif" font-size="26" fill="hsl(${hue},30%,38%)" text-anchor="middle" dominant-baseline="middle">${esc(label)}</text>
+  </svg>`;
+  return `data:image/svg+xml,${encodeURIComponent(svg)}`;
+}
+const SHOTS = SHOT_LABELS.map((label, i) => ({ src: placeholderShot(i), label }));
+
+function esc(s) {
+  return String(s).replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;').replace(/"/g, '&quot;');
+}
+
+let state = {
+  screen: 'home',
+  gi: 0,
+  cur: 0,
+  team: 'Team name here',
+  stadium: 'Stadium name here',
+  formation: '4-3-3',
+  extras: { Tifos: true, Flags: true, 'Player names': false },
+  notes: '',
+  filled: [0, 1, 2, 4, 6, 10],
+  authed: false,
+  limit: 20,
+  sold: 8,
+  pay: 0,
+  items: [
+    { name: 'Custom display case 22×30', price: '$350' },
+    { name: 'Extra slab holder (set of 3)', price: '$20' },
+    { name: 'Wall mount kit', price: '$14' },
+  ],
+  newItemName: '',
+  newItemPrice: '',
+};
+
+function setState(patch) {
+  state = { ...state, ...(typeof patch === 'function' ? patch(state) : patch) };
+  render();
+}
+
+function money(n) {
+  return CURRENCIES[state.cur].sym + n;
+}
+
+function remaining() {
+  return Math.max(0, state.limit - state.sold);
+}
+
+function stockLine() {
+  return `Only ${remaining()} left in this batch`;
+}
+
+function configLine() {
+  const active = Object.keys(state.extras).filter((k) => state.extras[k]);
+  return `${state.team} · ${state.stadium} · ${state.formation}${active.length ? ' · ' + active.join(', ') : ''}`;
+}
+
+// -- markup pieces ----------------------------------------------------------
+
+function topBanner() {
+  return `<div style="background:#12120f;color:rgba(255,255,255,.72);font-size:12px;letter-spacing:.06em;text-align:center;padding:9px 16px">Built to order in the USA · handmade in small batches · tracked UPS shipping worldwide</div>`;
+}
+
+function header() {
+  const nav = [
+    ['home', 'Product'],
+    ['customize', 'Build yours'],
+    ['checkout', 'Checkout'],
+  ];
+  const navHtml = nav
+    .map(
+      ([screen, label]) =>
+        `<button data-action="nav" data-screen="${screen}" class="nav-link" style="background:none;border:0;padding:6px 0;font-size:14px;color:#12120f;cursor:pointer">${label}</button>`
+    )
+    .join('');
+  return `
+  <header style="position:sticky;top:0;z-index:20;background:rgba(243,241,236,.88);backdrop-filter:blur(12px);border-bottom:1px solid rgba(0,0,0,.08)">
+    <div style="max-width:1240px;margin:0 auto;padding:16px 32px;display:flex;align-items:center;gap:32px">
+      <div style="display:flex;align-items:center;gap:10px;margin-right:8px">
+        <div style="width:26px;height:34px;border-radius:4px;background:#12120f;display:flex;align-items:flex-end;justify-content:center;padding-bottom:5px"><div style="width:12px;height:16px;border-radius:2px;background:#f3f1ec"></div></div>
+        <div style="line-height:1">
+          <div style="font-family:'Archivo',sans-serif;font-weight:800;font-size:15px;letter-spacing:-.02em;text-transform:uppercase">Pitchside</div>
+          <div style="font-family:'Archivo',sans-serif;font-weight:600;font-size:9.5px;letter-spacing:.34em;color:rgba(0,0,0,.45);text-transform:uppercase">Displays</div>
+        </div>
+      </div>
+      <nav style="display:flex;gap:26px;flex:1">
+        ${navHtml}
+        <button data-action="nav" data-screen="admin" class="nav-link" style="background:none;border:0;padding:6px 0;font-size:14px;color:rgba(0,0,0,.45);cursor:pointer">Admin</button>
+      </nav>
+      <div style="display:flex;align-items:center;gap:14px">
+        <div style="display:inline-flex;align-items:center;gap:7px;background:#b3261e;color:#fff;border-radius:999px;padding:7px 14px 7px 11px;font-family:'Archivo',sans-serif;font-weight:700;font-size:12px;letter-spacing:.04em;text-transform:uppercase;box-shadow:0 1px 8px rgba(179,38,30,.32)">
+          <span style="width:7px;height:7px;border-radius:50%;background:#fff;animation:psd-pulse 1.4s ease-in-out infinite"></span>${esc(stockLine())}
+        </div>
+        <button data-action="nav" data-screen="customize" style="background:#12120f;color:#fff;border:0;border-radius:999px;padding:11px 22px;font-size:13.5px;font-weight:500;cursor:pointer">Order now</button>
+      </div>
+    </div>
+  </header>`;
+}
+
+function footer() {
+  return `
+  <footer style="background:#12120f;color:#fff;margin-top:auto">
+    <div style="max-width:1240px;margin:0 auto;padding:52px 32px 40px;display:grid;grid-template-columns:1.2fr 1fr 1fr 1fr;gap:36px">
+      <div>
+        <div style="font-family:'Archivo',sans-serif;font-weight:800;font-size:17px;letter-spacing:-.02em;text-transform:uppercase">Pitchside Displays</div>
+        <p style="font-size:14px;line-height:1.6;color:rgba(255,255,255,.5);margin:12px 0 0;max-width:32ch">Made-to-order display cases for graded football cards. Built one at a time.</p>
+      </div>
+      <div>
+        <div style="font-size:11px;letter-spacing:.14em;text-transform:uppercase;color:rgba(255,255,255,.4);font-family:'Archivo',sans-serif;font-weight:600;margin-bottom:12px">Contact</div>
+        <a href="mailto:pitchsidedisplays@gmail.com" style="display:block;font-size:14px;color:#fff;margin-bottom:8px">pitchsidedisplays@gmail.com</a>
+        <a href="https://instagram.com/pitchsidedisplays" target="_blank" rel="noopener" style="display:block;font-size:14px;color:#fff">@pitchsidedisplays</a>
+      </div>
+      <div>
+        <div style="font-size:11px;letter-spacing:.14em;text-transform:uppercase;color:rgba(255,255,255,.4);font-family:'Archivo',sans-serif;font-weight:600;margin-bottom:12px">Shipping</div>
+        <div style="font-size:14px;color:rgba(255,255,255,.6);line-height:1.7">Ships from the USA<br/>Worldwide via UPS<br/>22 × 30 in · ~12 lb</div>
+      </div>
+      <div>
+        <div style="font-size:11px;letter-spacing:.14em;text-transform:uppercase;color:rgba(255,255,255,.4);font-family:'Archivo',sans-serif;font-weight:600;margin-bottom:12px">Info</div>
+        <div style="font-size:14px;color:rgba(255,255,255,.6);line-height:1.7">Returns &amp; damages<br/>Care guide<br/>Terms</div>
+      </div>
+    </div>
+    <div style="border-top:1px solid rgba(255,255,255,.12)">
+      <div style="max-width:1240px;margin:0 auto;padding:18px 32px;font-size:12.5px;color:rgba(255,255,255,.35)">© 2026 Pitchside Displays</div>
+    </div>
+  </footer>`;
+}
+
+function homeScreen() {
+  const hero = SHOTS[state.gi];
+  const galleryHtml = SHOTS.map(
+    (shot, i) => `
+    <button data-action="gallery-select" data-idx="${i}" style="flex:1;padding:0;border-radius:10px;overflow:hidden;background:#fff;cursor:pointer;aspect-ratio:3/4;border:1.5px solid ${i === state.gi ? '#12120f' : 'rgba(0,0,0,.1)'};opacity:${i === state.gi ? '1' : '.72'};transition:opacity .18s ease,border-color .18s ease">
+      <img src="${shot.src}" alt="${esc(shot.label)}" style="display:block;width:100%;height:100%;object-fit:cover"/>
+    </button>`
+  ).join('');
+
+  const currencyHtml = CURRENCIES.map(
+    (c, i) => `
+    <button data-action="currency-select" data-idx="${i}" style="border:0;border-radius:999px;padding:7px 16px;font-size:12.5px;font-weight:500;cursor:pointer;background:${i === state.cur ? '#12120f' : 'transparent'};color:${i === state.cur ? '#fff' : 'rgba(0,0,0,.55)'}">${c.code}</button>`
+  ).join('');
+
+  const specsHtml = SPECS.map(
+    (spec) => `
+    <div style="background:#fff;padding:16px 18px">
+      <div style="font-size:11px;letter-spacing:.12em;text-transform:uppercase;color:rgba(0,0,0,.42);font-family:'Archivo',sans-serif;font-weight:600">${esc(spec.k)}</div>
+      <div style="font-size:15px;margin-top:5px">${esc(spec.v)}</div>
+    </div>`
+  ).join('');
+
+  const stepsHtml = STEPS.map(
+    (step) => `
+    <div style="border-top:1px solid rgba(0,0,0,.12);padding-top:18px">
+      <div style="font-family:'Archivo',sans-serif;font-weight:800;font-size:13px;color:#1f6b4f;letter-spacing:.08em">${step.n}</div>
+      <div style="font-family:'Archivo',sans-serif;font-weight:700;font-size:20px;letter-spacing:-.02em;margin:10px 0 8px">${esc(step.t)}</div>
+      <p style="font-size:14.5px;line-height:1.55;color:rgba(0,0,0,.58);margin:0">${esc(step.d)}</p>
+    </div>`
+  ).join('');
+
+  const bigShot = SHOTS[1];
+  const restShots = [SHOTS[0], SHOTS[2], SHOTS[4], SHOTS[3], SHOTS[5]];
+  const restShotsHtml = restShots.map(
+    (shot) => `
+    <div style="position:relative;border-radius:16px;overflow:hidden;background:#e7e4dd">
+      <img src="${shot.src}" alt="" style="display:block;width:100%;height:100%;object-fit:contain"/>
+      <div style="position:absolute;left:12px;bottom:12px;background:rgba(18,18,15,.78);backdrop-filter:blur(6px);border-radius:7px;padding:5px 9px;font-family:'Archivo',sans-serif;font-weight:600;font-size:9.5px;letter-spacing:.12em;text-transform:uppercase;color:#fff">${esc(shot.label)}</div>
+    </div>`
+  ).join('');
+
+  const faqsHtml = FAQS.map(
+    (faq) => `
+    <div style="border-bottom:1px solid rgba(0,0,0,.1);padding:20px 0;display:grid;grid-template-columns:1fr 1.3fr;gap:28px">
+      <div style="font-size:15.5px;font-weight:500">${esc(faq.q)}</div>
+      <div style="font-size:15px;line-height:1.55;color:rgba(0,0,0,.6)">${esc(faq.a)}</div>
+    </div>`
+  ).join('');
+
+  return `
+  <main style="flex:1">
+    <section style="max-width:1240px;margin:0 auto;padding:56px 32px 40px;display:grid;grid-template-columns:1.05fr .95fr;gap:56px;align-items:start">
+      <div>
+        <div style="position:relative;background:#fff;border:1px solid rgba(0,0,0,.07);border-radius:18px;padding:8px;box-shadow:0 24px 50px -32px rgba(18,18,15,.4)">
+          <div style="position:relative;border-radius:14px;overflow:hidden;background:#eae7e0;aspect-ratio:4/5">
+            <img src="${hero.src}" alt="Custom pitchside display case" style="display:block;width:100%;height:100%;object-fit:contain"/>
+            <div style="position:absolute;inset:0;pointer-events:none;box-shadow:inset 0 0 90px rgba(18,18,15,.16)"></div>
+            <div style="position:absolute;left:14px;bottom:14px;display:flex;align-items:center;gap:10px">
+              <span style="background:rgba(18,18,15,.82);color:#fff;backdrop-filter:blur(6px);border-radius:999px;padding:6px 12px;font-family:'Archivo',sans-serif;font-weight:700;font-size:10.5px;letter-spacing:.14em">${state.gi + 1} / ${SHOTS.length}</span>
+              <span style="background:rgba(255,255,255,.9);color:#12120f;backdrop-filter:blur(6px);border-radius:999px;padding:6px 12px;font-size:11.5px;letter-spacing:.02em">${esc(hero.label)}</span>
+            </div>
+          </div>
+        </div>
+        <div style="display:flex;gap:12px;margin-top:14px">${galleryHtml}</div>
+      </div>
+
+      <div style="padding-top:6px">
+        <div style="display:inline-flex;align-items:center;gap:8px;border:1px solid rgba(0,0,0,.12);border-radius:999px;padding:5px 12px;font-size:11.5px;letter-spacing:.1em;text-transform:uppercase;color:rgba(0,0,0,.55);font-family:'Archivo',sans-serif;font-weight:600">
+          <span style="width:6px;height:6px;border-radius:50%;background:#1f6b4f"></span>Made to order · ships from the USA
+        </div>
+        <h1 style="font-family:'Archivo',sans-serif;font-weight:800;font-size:52px;line-height:.98;letter-spacing:-.032em;margin:18px 0 0;text-wrap:pretty">Custom soccer card display case</h1>
+        <p style="font-size:16.5px;line-height:1.55;color:rgba(0,0,0,.62);margin:16px 0 0;max-width:44ch">Your club, your stadium, your eleven. Eleven graded slabs mounted in formation behind UV acrylic, in a hinged black frame built to hang or stand.</p>
+
+        <div style="display:flex;align-items:flex-end;gap:16px;margin:28px 0 0">
+          <div style="font-family:'Archivo',sans-serif;font-weight:800;font-size:40px;letter-spacing:-.03em;line-height:1">${money(CURRENCIES[state.cur].price)}</div>
+          <div style="font-size:13px;color:rgba(0,0,0,.5);padding-bottom:7px">+ shipping, calculated at checkout</div>
+        </div>
+        <div style="display:flex;gap:6px;margin-top:14px;background:#e9e6df;border-radius:999px;padding:4px;width:fit-content">${currencyHtml}</div>
+
+        <div style="display:grid;grid-template-columns:1fr 1fr;gap:1px;background:rgba(0,0,0,.08);border:1px solid rgba(0,0,0,.08);border-radius:14px;overflow:hidden;margin:28px 0 0">${specsHtml}</div>
+
+        <div style="display:flex;gap:12px;margin-top:26px">
+          <button data-action="nav" data-screen="customize" style="flex:1;background:#12120f;color:#fff;border:0;border-radius:12px;padding:19px 26px;font-size:15.5px;font-weight:500;cursor:pointer;display:flex;align-items:center;justify-content:center;gap:10px">Start your custom order <span style="font-size:17px">→</span></button>
+          <a href="https://instagram.com/pitchsidedisplays" target="_blank" rel="noopener" style="border:1px solid rgba(0,0,0,.14);border-radius:12px;padding:19px 22px;font-size:15px;color:#12120f;display:flex;align-items:center">See it on IG</a>
+        </div>
+        <div style="margin-top:22px;border:1px solid rgba(179,38,30,.28);background:rgba(179,38,30,.05);border-radius:14px;padding:16px 18px">
+          <div style="display:flex;align-items:baseline;justify-content:space-between;gap:16px">
+            <div style="font-family:'Archivo',sans-serif;font-weight:800;font-size:15px;letter-spacing:-.01em;color:#b3261e">${esc(stockLine())}</div>
+            <div style="font-size:12.5px;color:rgba(0,0,0,.5)">${state.sold} of ${state.limit} claimed</div>
+          </div>
+          <div style="height:5px;border-radius:999px;background:rgba(179,38,30,.15);margin-top:11px;overflow:hidden">
+            <div style="height:100%;border-radius:999px;background:#b3261e;width:${Math.round((state.sold / state.limit) * 100)}%"></div>
+          </div>
+          <div style="margin-top:11px;font-size:12.5px;color:rgba(0,0,0,.55);line-height:1.5">Each batch is built by hand. When it's gone, the next one opens in January.</div>
+        </div>
+        <div style="margin-top:14px;display:flex;gap:14px;font-size:13px;color:rgba(0,0,0,.5)">
+          <span>4–6 week build</span><span>·</span><span>Ships from the USA</span><span>·</span><span>Tracked UPS delivery</span>
+        </div>
+      </div>
+    </section>
+
+    <section style="border-top:1px solid rgba(0,0,0,.08);background:#fff">
+      <div style="max-width:1240px;margin:0 auto;padding:64px 32px">
+        <h2 style="font-family:'Archivo',sans-serif;font-weight:700;font-size:13px;letter-spacing:.16em;text-transform:uppercase;color:rgba(0,0,0,.45);margin:0 0 34px">How it works</h2>
+        <div style="display:grid;grid-template-columns:repeat(4,1fr);gap:36px">${stepsHtml}</div>
+      </div>
+    </section>
+
+    <section style="max-width:1240px;margin:0 auto;padding:64px 32px">
+      <div style="display:flex;align-items:baseline;justify-content:space-between;margin-bottom:22px">
+        <h2 style="font-family:'Archivo',sans-serif;font-weight:700;font-size:13px;letter-spacing:.16em;text-transform:uppercase;color:rgba(0,0,0,.45);margin:0">In the wild</h2>
+        <span style="font-size:12.5px;color:rgba(0,0,0,.4)">Six of one · every case is built to its own brief</span>
+      </div>
+      <div style="display:grid;grid-template-columns:repeat(3,1fr);grid-auto-rows:372px;gap:14px">
+        <div style="grid-column:span 2;grid-row:span 2;position:relative;border-radius:16px;overflow:hidden;background:#e7e4dd">
+          <img src="${bigShot.src}" alt="" style="display:block;width:100%;height:100%;object-fit:contain"/>
+          <div style="position:absolute;left:16px;bottom:16px;background:rgba(255,255,255,.92);border-radius:8px;padding:6px 11px;font-family:'Archivo',sans-serif;font-weight:600;font-size:10.5px;letter-spacing:.12em;text-transform:uppercase;color:#12120f">${esc(bigShot.label)}</div>
+        </div>
+        ${restShotsHtml}
+      </div>
+    </section>
+
+    <section style="border-top:1px solid rgba(0,0,0,.08)">
+      <div style="max-width:1240px;margin:0 auto;padding:56px 32px 72px;display:grid;grid-template-columns:.8fr 1.2fr;gap:56px">
+        <h2 style="font-family:'Archivo',sans-serif;font-weight:800;font-size:34px;line-height:1.05;letter-spacing:-.03em;margin:0">Questions,<br/>answered</h2>
+        <div style="border-top:1px solid rgba(0,0,0,.1)">${faqsHtml}</div>
+      </div>
+    </section>
+  </main>`;
+}
+
+function customizeScreen() {
+  const counts = FORMATIONS[state.formation];
+  let n = counts.reduce((a, b) => a + b, 0);
+  const rowsHtml = counts
+    .map((c) => {
+      const slots = [];
+      for (let i = 0; i < c; i++) {
+        const idx = --n;
+        const on = state.filled.indexOf(idx) !== -1;
+        slots.push(`
+          <button data-action="slot-toggle" data-idx="${idx}" style="width:19%;aspect-ratio:5/7;border-radius:5px;cursor:pointer;display:flex;align-items:center;justify-content:center;font-size:10px;font-family:'Archivo',sans-serif;font-weight:700;letter-spacing:.06em;border:1.5px solid ${on ? '#f7f6f2' : 'rgba(255,255,255,.3)'};background:${on ? '#f7f6f2' : 'rgba(255,255,255,.06)'};color:${on ? '#12120f' : 'rgba(255,255,255,.45)'};box-shadow:0 2px 10px rgba(0,0,0,.35)">${on ? 'PSA' : idx + 1}</button>`);
+      }
+      return `<div style="display:flex;gap:4.5%;justify-content:center">${slots.join('')}</div>`;
+    })
+    .join('');
+
+  const teamOptsHtml = TEAM_OPTIONS.map((t) => `<option value="${esc(t)}" ${t === state.team ? 'selected' : ''}>${esc(t)}</option>`).join('');
+  const stadiumOptsHtml = STADIUM_OPTIONS.map((s) => `<option value="${esc(s)}" ${s === state.stadium ? 'selected' : ''}>${esc(s)}</option>`).join('');
+
+  const extraKeys = Object.keys(state.extras);
+  const extrasHtml = extraKeys
+    .map((k) => {
+      const on = state.extras[k];
+      return `<button data-action="extra-toggle" data-key="${esc(k)}" style="border-radius:999px;padding:10px 16px;font-size:13.5px;cursor:pointer;border:1px solid ${on ? '#12120f' : 'rgba(0,0,0,.14)'};background:${on ? '#12120f' : '#fff'};color:${on ? '#fff' : 'rgba(0,0,0,.65)'}">${esc(k)}</button>`;
+    })
+    .join('');
+
+  const price = CURRENCIES[state.cur].price;
+
+  return `
+  <main style="flex:1;max-width:1240px;margin:0 auto;padding:40px 32px 72px;width:100%;box-sizing:border-box">
+    <div style="display:flex;align-items:baseline;justify-content:space-between;margin-bottom:26px">
+      <h1 style="font-family:'Archivo',sans-serif;font-weight:800;font-size:34px;letter-spacing:-.03em;margin:0">Build your display</h1>
+      <div style="font-size:13.5px;color:rgba(0,0,0,.5)">Step 1 of 2 · ${esc(stockLine())}</div>
+    </div>
+
+    <div style="display:grid;grid-template-columns:1fr 1fr;gap:28px;align-items:start">
+      <div style="background:#12120f;border-radius:18px;padding:26px;position:sticky;top:88px">
+        <div style="text-align:center;color:#fff;margin-bottom:18px">
+          <div style="font-family:'Archivo',sans-serif;font-weight:800;font-size:17px;letter-spacing:.06em;text-transform:uppercase">${esc(state.team)}</div>
+        </div>
+        <div style="position:relative;aspect-ratio:22/30;border-radius:6px;overflow:hidden;border:1px solid rgba(255,255,255,.22);background:linear-gradient(180deg,#0e0e0c 0%,#12140f 34%,rgba(31,107,79,.5) 72%,rgba(31,107,79,.72) 100%)">
+          <div style="position:absolute;left:7%;right:7%;top:5%;bottom:5%;border:1px solid rgba(255,255,255,.22)"></div>
+          <div style="position:absolute;left:30%;right:30%;top:5%;height:11%;border:1px solid rgba(255,255,255,.18);border-top:0"></div>
+          <div style="position:absolute;left:30%;right:30%;bottom:5%;height:11%;border:1px solid rgba(255,255,255,.18);border-bottom:0"></div>
+          <div style="position:absolute;left:7%;right:7%;top:50%;height:1px;background:rgba(255,255,255,.18)"></div>
+          <div style="position:absolute;left:50%;top:50%;width:26%;aspect-ratio:1;transform:translate(-50%,-50%);border:1px solid rgba(255,255,255,.18);border-radius:50%"></div>
+          <div style="position:absolute;left:11%;right:11%;top:9%;bottom:9%;display:flex;flex-direction:column;justify-content:space-between">${rowsHtml}</div>
+        </div>
+        <div style="display:flex;justify-content:space-between;align-items:center;margin-top:16px;color:rgba(255,255,255,.55);font-size:12.5px">
+          <span>${state.filled.length} of 11 slots marked</span>
+          <button data-action="reset-slots" style="background:none;border:1px solid rgba(255,255,255,.25);color:rgba(255,255,255,.8);border-radius:999px;padding:6px 14px;font-size:12px;cursor:pointer">Clear</button>
+        </div>
+        <p style="color:rgba(255,255,255,.4);font-size:12px;line-height:1.5;margin:14px 0 0">Tap a slot to mark which slabs you're mounting. Slots fit PSA, ACE and same-size graded cards.</p>
+      </div>
+
+      <div style="display:flex;flex-direction:column;gap:20px">
+        <div style="background:#fff;border:1px solid rgba(0,0,0,.08);border-radius:16px;padding:24px;display:flex;align-items:center;justify-content:space-between;gap:20px">
+          <div>
+            <div style="font-family:'Archivo',sans-serif;font-weight:700;font-size:12px;letter-spacing:.14em;text-transform:uppercase;color:rgba(0,0,0,.45)">Formation</div>
+            <div style="font-size:13.5px;color:rgba(0,0,0,.55);margin-top:7px;line-height:1.5">Every case is laid out 4-3-3 across eleven slots. Want a different shape? Note it below.</div>
+          </div>
+          <div style="font-family:'Archivo',sans-serif;font-weight:800;font-size:26px;letter-spacing:.02em;background:#12120f;color:#fff;border-radius:12px;padding:14px 22px;flex:none">${state.formation}</div>
+        </div>
+
+        <div style="background:#fff;border:1px solid rgba(0,0,0,.08);border-radius:16px;padding:24px;display:grid;grid-template-columns:1fr 1fr;gap:18px">
+          <div>
+            <label style="display:block;font-size:12.5px;font-weight:500;margin-bottom:7px">Club</label>
+            <select data-action="set-team" style="width:100%;box-sizing:border-box;padding:13px 12px;border:1px solid rgba(0,0,0,.14);border-radius:10px;font-size:14.5px;background:#fff">${teamOptsHtml}</select>
+          </div>
+          <div>
+            <label style="display:block;font-size:12.5px;font-weight:500;margin-bottom:7px">Stadium background</label>
+            <select data-action="set-stadium" style="width:100%;box-sizing:border-box;padding:13px 12px;border:1px solid rgba(0,0,0,.14);border-radius:10px;font-size:14.5px;background:#fff">${stadiumOptsHtml}</select>
+          </div>
+          <div style="grid-column:1/-1">
+            <label style="display:block;font-size:12.5px;font-weight:500;margin-bottom:9px">Crowd extras</label>
+            <div style="display:flex;gap:10px;flex-wrap:wrap">${extrasHtml}</div>
+          </div>
+          <div style="grid-column:1/-1">
+            <label style="display:block;font-size:12.5px;font-weight:500;margin-bottom:7px">Additional notes</label>
+            <textarea data-action="set-notes" placeholder="Player names, a season, a shirt number under each slab, anything else." style="width:100%;box-sizing:border-box;min-height:96px;padding:13px 12px;border:1px solid rgba(0,0,0,.14);border-radius:10px;font-size:14.5px;resize:vertical">${esc(state.notes)}</textarea>
+          </div>
+        </div>
+
+        <div style="background:#fff;border:1px solid rgba(0,0,0,.08);border-radius:16px;padding:24px">
+          <div style="display:flex;justify-content:space-between;font-size:14.5px;padding-bottom:12px;border-bottom:1px solid rgba(0,0,0,.08)"><span style="color:rgba(0,0,0,.55)">Custom display case, 22 × 30 in</span><span>${money(price)}</span></div>
+          <div style="display:flex;justify-content:space-between;font-size:14.5px;padding:12px 0;border-bottom:1px solid rgba(0,0,0,.08)"><span style="color:rgba(0,0,0,.55)">${esc(configLine())}</span><span style="color:rgba(0,0,0,.45)">Included</span></div>
+          <div style="display:flex;justify-content:space-between;align-items:baseline;padding-top:16px">
+            <span style="font-family:'Archivo',sans-serif;font-weight:700;font-size:18px">Total</span>
+            <span style="font-family:'Archivo',sans-serif;font-weight:800;font-size:24px;letter-spacing:-.02em">${money(price)} <span style="font-size:13px;font-weight:500;color:rgba(0,0,0,.45)">+ shipping</span></span>
+          </div>
+          <button data-action="nav" data-screen="checkout" style="width:100%;margin-top:18px;background:#12120f;color:#fff;border:0;border-radius:12px;padding:18px;font-size:15.5px;font-weight:500;cursor:pointer">Continue to checkout</button>
+        </div>
+      </div>
+    </div>
+  </main>`;
+}
+
+function checkoutScreen() {
+  const price = CURRENCIES[state.cur].price;
+  const ship = CURRENCIES[state.cur].ship;
+  const totals = [
+    { k: 'Subtotal', v: money(price) },
+    { k: 'Shipping (tracked, from USA)', v: money(ship) },
+    { k: 'Sales tax', v: 'Calculated at payment' },
+  ];
+
+  const fieldsHtml = CHECKOUT_FIELDS.map(
+    (f) => `
+    <div style="grid-column:${f.full ? '1/-1' : 'auto'}">
+      <label style="display:block;font-size:12.5px;font-weight:500;margin-bottom:7px">${esc(f.label)}</label>
+      <input placeholder="${esc(f.ph)}" style="width:100%;box-sizing:border-box;padding:13px 12px;border:1px solid rgba(0,0,0,.14);border-radius:10px;font-size:14.5px"/>
+    </div>`
+  ).join('');
+
+  const payHtml = PAY_METHODS.map((pm, i) => {
+    const on = state.pay === i;
+    return `
+    <button data-action="pay-select" data-idx="${i}" style="display:flex;align-items:center;gap:14px;text-align:left;border-radius:12px;padding:16px 18px;cursor:pointer;border:1.5px solid ${on ? '#12120f' : 'rgba(0,0,0,.12)'};background:${on ? '#f7f6f2' : '#fff'}">
+      <span style="width:16px;height:16px;border-radius:50%;border:1.5px solid ${on ? '#12120f' : 'rgba(0,0,0,.3)'};background:${on ? '#12120f' : 'transparent'};flex:none"></span>
+      <span style="flex:1">
+        <span style="display:block;font-size:14.5px;font-weight:500">${esc(pm.name)}</span>
+        <span style="display:block;font-size:12.5px;color:rgba(0,0,0,.5);margin-top:2px">${esc(pm.note)}</span>
+      </span>
+    </button>`;
+  }).join('');
+
+  const totalsHtml = totals
+    .map(
+      (row) => `
+    <div style="display:flex;justify-content:space-between;font-size:14px;padding:11px 0;border-bottom:1px solid rgba(0,0,0,.06)"><span style="color:rgba(0,0,0,.55)">${esc(row.k)}</span><span>${esc(row.v)}</span></div>`
+    )
+    .join('');
+
+  const totalLabel = money(price + ship);
+
+  return `
+  <main style="flex:1;max-width:1040px;margin:0 auto;padding:40px 32px 72px;width:100%;box-sizing:border-box">
+    <h1 style="font-family:'Archivo',sans-serif;font-weight:800;font-size:34px;letter-spacing:-.03em;margin:0 0 26px">Checkout</h1>
+    <div style="display:grid;grid-template-columns:1.15fr .85fr;gap:28px;align-items:start">
+      <div style="display:flex;flex-direction:column;gap:20px">
+        <div style="background:#fff;border:1px solid rgba(0,0,0,.08);border-radius:16px;padding:24px">
+          <div style="font-family:'Archivo',sans-serif;font-weight:700;font-size:12px;letter-spacing:.14em;text-transform:uppercase;color:rgba(0,0,0,.45);margin-bottom:18px">Contact &amp; delivery</div>
+          <div style="display:grid;grid-template-columns:1fr 1fr;gap:16px">${fieldsHtml}</div>
+        </div>
+
+        <div style="background:#fff;border:1px solid rgba(0,0,0,.08);border-radius:16px;padding:24px">
+          <div style="font-family:'Archivo',sans-serif;font-weight:700;font-size:12px;letter-spacing:.14em;text-transform:uppercase;color:rgba(0,0,0,.45);margin-bottom:18px">Payment</div>
+          <div style="display:flex;flex-direction:column;gap:10px">${payHtml}</div>
+          <p style="font-size:12.5px;color:rgba(0,0,0,.45);line-height:1.5;margin:16px 0 0">Mockup only — the live site routes this to a hosted checkout, so no card data touches the site.</p>
+        </div>
+      </div>
+
+      <div style="background:#fff;border:1px solid rgba(0,0,0,.08);border-radius:16px;padding:24px;position:sticky;top:88px">
+        <div style="font-family:'Archivo',sans-serif;font-weight:700;font-size:12px;letter-spacing:.14em;text-transform:uppercase;color:rgba(0,0,0,.45);margin-bottom:16px">Order summary</div>
+        <div style="display:flex;gap:14px;padding-bottom:16px;border-bottom:1px solid rgba(0,0,0,.08)">
+          <div style="width:64px;height:86px;border-radius:8px;overflow:hidden;background:#efece6;flex:none"><img src="${SHOTS[state.gi].src}" alt="" style="width:100%;height:100%;object-fit:cover"/></div>
+          <div>
+            <div style="font-size:14.5px;font-weight:500">Custom display case</div>
+            <div style="font-size:12.5px;color:rgba(0,0,0,.5);margin-top:4px;line-height:1.5">${esc(configLine())}</div>
+          </div>
+        </div>
+        ${totalsHtml}
+        <div style="display:flex;justify-content:space-between;align-items:baseline;padding-top:16px">
+          <span style="font-family:'Archivo',sans-serif;font-weight:700;font-size:17px">Total</span>
+          <span style="font-family:'Archivo',sans-serif;font-weight:800;font-size:24px;letter-spacing:-.02em">${totalLabel}</span>
+        </div>
+        <button style="width:100%;margin-top:18px;background:#12120f;color:#fff;border:0;border-radius:12px;padding:18px;font-size:15.5px;font-weight:500;cursor:pointer">Pay ${totalLabel}</button>
+        <div style="margin-top:14px;font-size:12.5px;color:rgba(0,0,0,.5);line-height:1.6">Ships from the USA, 22 × 30 in and ~12 lb boxed · US delivery 3–5 days after build · tracked</div>
+      </div>
+    </div>
+  </main>`;
+}
+
+function adminScreen() {
+  if (!state.authed) {
+    return `
+    <main style="flex:1;width:100%">
+      <div style="max-width:400px;margin:0 auto;padding:96px 32px">
+        <h1 style="font-family:'Archivo',sans-serif;font-weight:800;font-size:26px;letter-spacing:-.02em;margin:0 0 6px">Admin login</h1>
+        <p style="font-size:14px;color:rgba(0,0,0,.55);margin:0 0 24px">Orders, stock limits and catalogue.</p>
+        <div style="background:#fff;border:1px solid rgba(0,0,0,.08);border-radius:16px;padding:24px;display:flex;flex-direction:column;gap:14px">
+          <div>
+            <label style="display:block;font-size:12.5px;font-weight:500;margin-bottom:7px">Email</label>
+            <input placeholder="pitchsidedisplays@gmail.com" style="width:100%;box-sizing:border-box;padding:13px 12px;border:1px solid rgba(0,0,0,.14);border-radius:10px;font-size:14.5px"/>
+          </div>
+          <div>
+            <label style="display:block;font-size:12.5px;font-weight:500;margin-bottom:7px">Password</label>
+            <input type="password" placeholder="••••••••" style="width:100%;box-sizing:border-box;padding:13px 12px;border:1px solid rgba(0,0,0,.14);border-radius:10px;font-size:14.5px"/>
+          </div>
+          <button data-action="login" style="background:#12120f;color:#fff;border:0;border-radius:11px;padding:16px;font-size:15px;font-weight:500;cursor:pointer;margin-top:4px">Sign in</button>
+        </div>
+      </div>
+    </main>`;
+  }
+
+  const stats = [
+    { k: 'Outstanding', v: '4', note: 'in build or awaiting approval' },
+    { k: 'Sold this batch', v: String(state.sold), note: `${remaining()} still listed` },
+    { k: 'Revenue (30d)', v: '$2,800', note: '8 orders' },
+    { k: 'Avg build time', v: '31d', note: 'approval to shipped' },
+  ];
+  const statsHtml = stats
+    .map(
+      (st) => `
+    <div style="background:#fff;border:1px solid rgba(0,0,0,.08);border-radius:14px;padding:20px">
+      <div style="font-size:11px;letter-spacing:.12em;text-transform:uppercase;color:rgba(0,0,0,.42);font-family:'Archivo',sans-serif;font-weight:600">${esc(st.k)}</div>
+      <div style="font-family:'Archivo',sans-serif;font-weight:800;font-size:28px;letter-spacing:-.02em;margin-top:8px">${esc(st.v)}</div>
+      <div style="font-size:12.5px;color:rgba(0,0,0,.45);margin-top:4px">${esc(st.note)}</div>
+    </div>`
+    )
+    .join('');
+
+  const ordersHtml = ORDERS.map((o) => {
+    const [bg, fg] = STATUS_COLORS[o.status];
+    return `
+    <div style="display:grid;grid-template-columns:76px 1fr 1.25fr 92px 76px;column-gap:16px;padding:15px 22px;font-size:13.5px;align-items:center;border-bottom:1px solid rgba(0,0,0,.05)">
+      <div style="font-family:'Archivo',sans-serif;font-weight:700;font-size:12.5px">${esc(o.ref)}</div>
+      <div><div>${esc(o.name)}</div><div style="font-size:12px;color:rgba(0,0,0,.45);margin-top:2px">${esc(o.place)}</div></div>
+      <div style="color:rgba(0,0,0,.6);font-size:13px">${esc(o.build)}</div>
+      <div><span style="display:inline-block;font-size:11.5px;padding:5px 10px;border-radius:999px;background:${bg};color:${fg}">${esc(o.status)}</span></div>
+      <div style="text-align:right">${esc(o.total)}</div>
+    </div>`;
+  }).join('');
+
+  const itemsHtml = state.items
+    .map(
+      (it) => `
+    <div style="display:flex;justify-content:space-between;font-size:14px;padding:11px 0;border-bottom:1px solid rgba(0,0,0,.06)"><span>${esc(it.name)}</span><span style="color:rgba(0,0,0,.55)">${esc(it.price)}</span></div>`
+    )
+    .join('');
+
+  return `
+  <main style="flex:1;width:100%">
+    <div style="max-width:1240px;margin:0 auto;padding:36px 32px 72px">
+      <div style="display:flex;align-items:baseline;justify-content:space-between;margin-bottom:24px">
+        <h1 style="font-family:'Archivo',sans-serif;font-weight:800;font-size:30px;letter-spacing:-.03em;margin:0">Dashboard</h1>
+        <button data-action="logout" style="background:none;border:1px solid rgba(0,0,0,.14);border-radius:999px;padding:9px 18px;font-size:13px;cursor:pointer">Sign out</button>
+      </div>
+
+      <div style="display:grid;grid-template-columns:repeat(4,1fr);gap:16px;margin-bottom:24px">${statsHtml}</div>
+
+      <div style="display:grid;grid-template-columns:1.5fr .85fr;gap:24px;align-items:start">
+        <div style="background:#fff;border:1px solid rgba(0,0,0,.08);border-radius:16px;overflow:hidden">
+          <div style="padding:20px 22px;border-bottom:1px solid rgba(0,0,0,.08);display:flex;justify-content:space-between;align-items:center">
+            <div style="font-family:'Archivo',sans-serif;font-weight:700;font-size:12px;letter-spacing:.14em;text-transform:uppercase;color:rgba(0,0,0,.45)">Orders</div>
+            <div style="font-size:12.5px;color:rgba(0,0,0,.45)">${ORDERS.length} total</div>
+          </div>
+          <div style="display:grid;grid-template-columns:76px 1fr 1.25fr 92px 76px;column-gap:16px;padding:12px 22px;font-size:11px;letter-spacing:.1em;text-transform:uppercase;color:rgba(0,0,0,.4);font-family:'Archivo',sans-serif;font-weight:600;border-bottom:1px solid rgba(0,0,0,.06)">
+            <div>Ref</div><div>Customer</div><div>Build</div><div>Status</div><div style="text-align:right">Total</div>
+          </div>
+          ${ordersHtml}
+        </div>
+
+        <div style="display:flex;flex-direction:column;gap:20px">
+          <div style="background:#fff;border:1px solid rgba(0,0,0,.08);border-radius:16px;padding:22px">
+            <div style="font-family:'Archivo',sans-serif;font-weight:700;font-size:12px;letter-spacing:.14em;text-transform:uppercase;color:rgba(0,0,0,.45)">Batch limit</div>
+            <p style="font-size:13px;color:rgba(0,0,0,.55);line-height:1.5;margin:10px 0 16px">The number shown on the storefront as remaining.</p>
+            <div style="display:flex;align-items:center;gap:14px">
+              <button data-action="dec-limit" style="width:40px;height:40px;border-radius:10px;border:1px solid rgba(0,0,0,.14);background:#fff;font-size:19px;cursor:pointer">−</button>
+              <div style="font-family:'Archivo',sans-serif;font-weight:800;font-size:30px;min-width:52px;text-align:center">${state.limit}</div>
+              <button data-action="inc-limit" style="width:40px;height:40px;border-radius:10px;border:1px solid rgba(0,0,0,.14);background:#fff;font-size:19px;cursor:pointer">+</button>
+              <div style="font-size:13px;color:rgba(0,0,0,.5);margin-left:4px">${esc(stockLine())}</div>
+            </div>
+          </div>
+
+          <div style="background:#fff;border:1px solid rgba(0,0,0,.08);border-radius:16px;padding:22px">
+            <div style="font-family:'Archivo',sans-serif;font-weight:700;font-size:12px;letter-spacing:.14em;text-transform:uppercase;color:rgba(0,0,0,.45);margin-bottom:16px">Catalogue</div>
+            ${itemsHtml}
+            <div style="display:flex;gap:8px;margin-top:16px">
+              <input data-action="set-item-name" value="${esc(state.newItemName)}" placeholder="Item name" style="flex:1;min-width:0;padding:11px;border:1px solid rgba(0,0,0,.14);border-radius:9px;font-size:13.5px"/>
+              <input data-action="set-item-price" value="${esc(state.newItemPrice)}" placeholder="Price" style="width:74px;padding:11px;border:1px solid rgba(0,0,0,.14);border-radius:9px;font-size:13.5px"/>
+              <button data-action="add-item" style="background:#12120f;color:#fff;border:0;border-radius:9px;padding:11px 16px;font-size:13.5px;cursor:pointer">Add</button>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </main>`;
+}
+
+// -- render + event wiring ---------------------------------------------------
+
+function screenHtml() {
+  switch (state.screen) {
+    case 'customize':
+      return customizeScreen();
+    case 'checkout':
+      return checkoutScreen();
+    case 'admin':
+      return adminScreen();
+    case 'home':
+    default:
+      return homeScreen();
+  }
+}
+
+function render() {
+  const app = document.getElementById('app');
+  app.innerHTML = `
+    <div style="min-height:100vh;display:flex;flex-direction:column">
+      ${topBanner()}
+      ${header()}
+      ${screenHtml()}
+      ${footer()}
+    </div>`;
+}
+
+function bindEvents() {
+  const app = document.getElementById('app');
+
+  app.addEventListener('click', (e) => {
+    const el = e.target.closest('[data-action]');
+    if (!el) return;
+    const action = el.dataset.action;
+
+    switch (action) {
+      case 'nav':
+        setState({ screen: el.dataset.screen });
+        break;
+      case 'gallery-select':
+        setState({ gi: Number(el.dataset.idx) });
+        break;
+      case 'currency-select':
+        setState({ cur: Number(el.dataset.idx) });
+        break;
+      case 'slot-toggle': {
+        const idx = Number(el.dataset.idx);
+        setState((st) => ({
+          filled: st.filled.indexOf(idx) !== -1 ? st.filled.filter((x) => x !== idx) : st.filled.concat(idx),
+        }));
+        break;
+      }
+      case 'reset-slots':
+        setState({ filled: [] });
+        break;
+      case 'extra-toggle': {
+        const key = el.dataset.key;
+        setState((st) => ({ extras: { ...st.extras, [key]: !st.extras[key] } }));
+        break;
+      }
+      case 'login':
+        setState({ authed: true });
+        break;
+      case 'logout':
+        setState({ authed: false });
+        break;
+      case 'inc-limit':
+        setState((st) => ({ limit: st.limit + 1 }));
+        break;
+      case 'dec-limit':
+        setState((st) => ({ limit: Math.max(st.sold, st.limit - 1) }));
+        break;
+      case 'pay-select':
+        setState({ pay: Number(el.dataset.idx) });
+        break;
+      case 'add-item':
+        setState((st) =>
+          st.newItemName
+            ? {
+                items: st.items.concat({ name: st.newItemName, price: st.newItemPrice || '—' }),
+                newItemName: '',
+                newItemPrice: '',
+              }
+            : {}
+        );
+        break;
+      default:
+        break;
+    }
+  });
+
+  app.addEventListener('change', (e) => {
+    const el = e.target.closest('[data-action]');
+    if (!el) return;
+    const action = el.dataset.action;
+
+    switch (action) {
+      case 'set-team':
+        setState({ team: el.value });
+        break;
+      case 'set-stadium':
+        setState({ stadium: el.value });
+        break;
+      case 'set-notes':
+        setState({ notes: el.value });
+        break;
+      case 'set-item-name':
+        setState({ newItemName: el.value });
+        break;
+      case 'set-item-price':
+        setState({ newItemPrice: el.value });
+        break;
+      default:
+        break;
+    }
+  });
+}
+
+function init() {
+  bindEvents();
+  render();
+}
+
+document.addEventListener('DOMContentLoaded', init);
