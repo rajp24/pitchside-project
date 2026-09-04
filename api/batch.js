@@ -12,7 +12,10 @@ export default async function handler(req, res) {
   if (req.method === 'GET') {
     const raw = await redis.get(KEY);
     const remaining = Number.isInteger(raw) ? raw : 0;
-    res.setHeader('Cache-Control', 'public, max-age=60, s-maxage=60');
+    // Never cache: a stale value here means the storefront can show stock
+    // that's already sold out, or "sold out" when it isn't — worse than
+    // one extra Redis read per page view.
+    res.setHeader('Cache-Control', 'no-store');
     return res.status(200).json({ remaining });
   }
 

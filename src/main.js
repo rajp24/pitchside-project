@@ -120,7 +120,7 @@ function stockLine() {
 
 async function fetchBatchRemaining() {
   try {
-    const res = await fetch('/api/batch');
+    const res = await fetch('/api/batch', { cache: 'no-store' });
     if (!res.ok) return;
     const data = await res.json();
     if (Number.isInteger(data.remaining)) {
@@ -646,6 +646,11 @@ function init() {
   render();
   window.addEventListener('beforeunload', () => videoObserver?.disconnect());
   fetchBatchRemaining();
+  // Catches the case where the tab was already open (so the on-load fetch
+  // ran before an admin's update) and is switched back to later.
+  document.addEventListener('visibilitychange', () => {
+    if (document.visibilityState === 'visible') fetchBatchRemaining();
+  });
 }
 
 document.addEventListener('DOMContentLoaded', init);
