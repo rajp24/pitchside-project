@@ -25,15 +25,10 @@ npm run preview    # preview the production build locally
 
 ## Product photography
 
-The Claude Design export (`design/Pitchside Displays.dc.html`) referenced
-photos that live in the design canvas, not in this repo. Until real photos
-are supplied, `src/main.js` generates labeled placeholder images at
-runtime (`placeholderShot()`) so the gallery, hero and admin thumbnails all
-render correctly. To swap in real photos:
-
-1. Drop the image files into `public/images/`.
-2. In `src/main.js`, replace the `SHOTS` array (built from `SHOT_LABELS` +
-   `placeholderShot()`) with entries pointing at `/images/your-file.jpg`.
+Product photos live in `public/images/`. `src/main.js` builds the `SHOTS`
+array by pairing `SHOT_LABELS` with `SHOT_FILES` (in order) — add a new
+photo by dropping the file into `public/images/` and adding its filename
+and label to those two arrays.
 
 ## Importing a Claude Design export
 

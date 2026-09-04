@@ -73,9 +73,6 @@ const STATUS_COLORS = {
   Shipped: ['#f0f0ef', 'rgba(0,0,0,.5)'],
 };
 
-// Product photography isn't available in this repo (the Claude Design export
-// only carries labels, not the underlying images) — placeholders stand in
-// until real photos land in public/images. See design/README.md.
 const SHOT_LABELS = [
   'Hinged front, eleven slots ready',
   'Mounted on a mantel, 4-3-3',
@@ -84,18 +81,15 @@ const SHOT_LABELS = [
   'Closed, empty stadium print',
   'Frame depth and hinge',
 ];
-const SHOT_HUES = [162, 205, 24, 280, 48, 340];
-
-function placeholderShot(i) {
-  const hue = SHOT_HUES[i % SHOT_HUES.length];
-  const label = SHOT_LABELS[i];
-  const svg = `<svg xmlns="http://www.w3.org/2000/svg" width="600" height="750">
-    <rect width="100%" height="100%" fill="hsl(${hue},24%,88%)"/>
-    <text x="50%" y="50%" font-family="sans-serif" font-size="26" fill="hsl(${hue},30%,38%)" text-anchor="middle" dominant-baseline="middle">${esc(label)}</text>
-  </svg>`;
-  return `data:image/svg+xml,${encodeURIComponent(svg)}`;
-}
-const SHOTS = SHOT_LABELS.map((label, i) => ({ src: placeholderShot(i), label }));
+const SHOT_FILES = [
+  '3C67B8AD-57F9-4493-BC18-450166495533.PNG',
+  'EC7A3367-A735-4D0B-9CB3-B921471F4DB7.PNG',
+  'AD9B18D1-4427-42F6-8EF3-65B63003BEA3.PNG',
+  '53910F18-4CC1-4585-8770-9D822D43751E.PNG',
+  'BCB54C4C-AD04-4D13-960E-8C95816EA069.PNG',
+  'FF6C8EB2-1D6C-4DA1-A14D-29AFA0D423FA.PNG',
+];
+const SHOTS = SHOT_LABELS.map((label, i) => ({ src: `/images/${SHOT_FILES[i]}`, label }));
 
 function esc(s) {
   return String(s).replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;').replace(/"/g, '&quot;');
