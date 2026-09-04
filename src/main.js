@@ -95,6 +95,10 @@ function esc(s) {
   return String(s).replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;').replace(/"/g, '&quot;');
 }
 
+function prefersReducedMotion() {
+  return window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+}
+
 let state = {
   screen: 'home',
   gi: 0,
@@ -241,15 +245,6 @@ function homeScreen() {
     </div>`
   ).join('');
 
-  const bigShot = SHOTS[1];
-  const restShots = [SHOTS[0], SHOTS[2], SHOTS[4], SHOTS[3], SHOTS[5]];
-  const restShotsHtml = restShots.map(
-    (shot) => `
-    <div style="position:relative;border-radius:16px;overflow:hidden;background:#e7e4dd">
-      <img src="${shot.src}" alt="" style="display:block;width:100%;height:100%;object-fit:contain"/>
-      <div style="position:absolute;left:12px;bottom:12px;background:rgba(18,18,15,.78);backdrop-filter:blur(6px);border-radius:7px;padding:5px 9px;font-family:'Archivo',sans-serif;font-weight:600;font-size:9.5px;letter-spacing:.12em;text-transform:uppercase;color:#fff">${esc(shot.label)}</div>
-    </div>`
-  ).join('');
 
   const faqsHtml = FAQS.map(
     (faq) => `
@@ -318,17 +313,44 @@ function homeScreen() {
       </div>
     </section>
 
-    <section style="max-width:1240px;margin:0 auto;padding:64px 32px">
-      <div style="display:flex;align-items:baseline;justify-content:space-between;margin-bottom:22px">
-        <h2 style="font-family:'Archivo',sans-serif;font-weight:700;font-size:13px;letter-spacing:.16em;text-transform:uppercase;color:rgba(0,0,0,.45);margin:0">In the wild</h2>
-        <span style="font-size:12.5px;color:rgba(0,0,0,.4)">Six of one · every case is built to its own brief</span>
-      </div>
-      <div style="display:grid;grid-template-columns:repeat(3,1fr);grid-auto-rows:372px;gap:14px">
-        <div style="grid-column:span 2;grid-row:span 2;position:relative;border-radius:16px;overflow:hidden;background:#e7e4dd">
-          <img src="${bigShot.src}" alt="" style="display:block;width:100%;height:100%;object-fit:contain"/>
-          <div style="position:absolute;left:16px;bottom:16px;background:rgba(255,255,255,.92);border-radius:8px;padding:6px 11px;font-family:'Archivo',sans-serif;font-weight:600;font-size:10.5px;letter-spacing:.12em;text-transform:uppercase;color:#12120f">${esc(bigShot.label)}</div>
+    <section style="background:#f3f1ec">
+      <div class="video-demo-grid" style="max-width:1240px;margin:0 auto;padding:64px 32px">
+        <div style="position:relative;width:100%;aspect-ratio:1280/2276;mask-image:linear-gradient(to right, transparent 0%, #000 10%, #000 90%, transparent 100%);-webkit-mask-image:linear-gradient(to right, transparent 0%, #000 10%, #000 90%, transparent 100%)">
+          <video
+            id="demo-video"
+            poster="/images/poster.jpg"
+            muted
+            loop
+            playsinline
+            disablepictureinpicture
+            controlslist="nodownload"
+            ${prefersReducedMotion() ? 'controls' : ''}
+            style="display:block;width:100%;height:100%;object-fit:cover"
+          >
+            <source src="/images/video.webm" type="video/webm">
+            <source src="/images/video.mp4" type="video/mp4">
+          </video>
         </div>
-        ${restShotsHtml}
+        <div>
+          <h2 style="font-family:'Archivo',sans-serif;font-weight:700;font-size:13px;letter-spacing:.16em;text-transform:uppercase;color:rgba(0,0,0,.45);margin:0">See it in the room</h2>
+          <div style="font-family:'Archivo',sans-serif;font-weight:800;font-size:34px;line-height:1.08;letter-spacing:-.03em;margin:14px 0 0">The same case, on an actual wall</div>
+          <p style="font-size:15.5px;line-height:1.6;color:rgba(0,0,0,.6);margin:16px 0 0;max-width:42ch">No renders. This is the 22 × 30 in case from the gallery — hinge open, hinge closed, mounted above a mantel at true scale.</p>
+          <div style="margin-top:26px;display:flex;flex-direction:column;gap:14px">
+            <div style="border-top:1px solid rgba(0,0,0,.1);padding-top:14px">
+              <div style="font-family:'Archivo',sans-serif;font-weight:700;font-size:14px">Hinged front</div>
+              <div style="font-size:13.5px;color:rgba(0,0,0,.55);margin-top:3px">Swap slabs without unmounting the case</div>
+            </div>
+            <div style="border-top:1px solid rgba(0,0,0,.1);padding-top:14px">
+              <div style="font-family:'Archivo',sans-serif;font-weight:700;font-size:14px">22 × 30 in</div>
+              <div style="font-size:13.5px;color:rgba(0,0,0,.55);margin-top:3px">Shown here at true size on a standard mantel</div>
+            </div>
+            <div style="border-top:1px solid rgba(0,0,0,.1);padding-top:14px">
+              <div style="font-family:'Archivo',sans-serif;font-weight:700;font-size:14px">UV acrylic</div>
+              <div style="font-size:13.5px;color:rgba(0,0,0,.55);margin-top:3px">Cuts glare under direct light</div>
+            </div>
+          </div>
+          <button data-action="nav" data-screen="customize" style="margin-top:28px;background:#12120f;color:#fff;border:0;border-radius:12px;padding:16px 24px;font-size:14.5px;font-weight:500;cursor:pointer">Start your custom order</button>
+        </div>
       </div>
     </section>
 
@@ -638,6 +660,32 @@ function screenHtml() {
   }
 }
 
+let videoObserver = null;
+
+function setupVideoObserver() {
+  videoObserver?.disconnect();
+  videoObserver = null;
+
+  if (state.screen !== 'home' || prefersReducedMotion()) return;
+
+  const video = document.getElementById('demo-video');
+  if (!video) return;
+
+  videoObserver = new IntersectionObserver(
+    (entries) => {
+      for (const entry of entries) {
+        if (entry.intersectionRatio >= 0.4) {
+          entry.target.play().catch(() => {});
+        } else {
+          entry.target.pause();
+        }
+      }
+    },
+    { threshold: 0.4 }
+  );
+  videoObserver.observe(video);
+}
+
 function render() {
   const app = document.getElementById('app');
   app.innerHTML = `
@@ -647,6 +695,7 @@ function render() {
       ${screenHtml()}
       ${footer()}
     </div>`;
+  setupVideoObserver();
 }
 
 function bindEvents() {
@@ -743,6 +792,7 @@ function bindEvents() {
 function init() {
   bindEvents();
   render();
+  window.addEventListener('beforeunload', () => videoObserver?.disconnect());
 }
 
 document.addEventListener('DOMContentLoaded', init);
