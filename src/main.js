@@ -25,7 +25,7 @@ const STADIUM_OPTIONS = [
 const SPECS = [
   { k: 'Outer size', v: '22 in × 32 in' }, { k: 'Slab slots', v: '11' },
   { k: 'Fits', v: 'PSA / ACE / same-size slabs' },
-  { k: 'Front', v: 'UV-protected acrylic, hinged' }, { k: 'Boxed weight', v: '~12 lb' },
+  { k: 'Front', v: 'UV-protected acrylic, hinged' }, { k: 'Boxed weight', v: '~20 lb' },
 ];
 
 const STEPS = [
@@ -199,7 +199,7 @@ function footer() {
       </div>
       <div>
         <div style="font-size:11px;letter-spacing:.14em;text-transform:uppercase;color:rgba(255,255,255,.4);font-family:'Archivo',sans-serif;font-weight:600;margin-bottom:12px">Shipping</div>
-        <div style="font-size:14px;color:rgba(255,255,255,.6);line-height:1.7">Ships from the USA<br/>Worldwide via UPS<br/>22 × 32 in · ~12 lb</div>
+        <div style="font-size:14px;color:rgba(255,255,255,.6);line-height:1.7">Ships from the USA<br/>Worldwide via UPS<br/>22 × 32 in · ~20 lb</div>
       </div>
       <div>
         <div style="font-size:11px;letter-spacing:.14em;text-transform:uppercase;color:rgba(255,255,255,.4);font-family:'Archivo',sans-serif;font-weight:600;margin-bottom:12px">Info</div>
@@ -528,7 +528,7 @@ function checkoutScreen() {
           <span style="font-family:'Archivo',sans-serif;font-weight:800;font-size:24px;letter-spacing:-.02em">${totalLabel}</span>
         </div>
         <button class="btn-primary" style="width:100%;margin-top:18px;color:#fff;border:0;border-radius:12px;padding:18px;font-size:15.5px;font-weight:500;cursor:pointer">Pay ${totalLabel}</button>
-        <div style="margin-top:14px;font-size:12.5px;color:rgba(0,0,0,.5);line-height:1.6">Ships from the USA, 22 × 32 in and ~12 lb boxed · US delivery 3–5 days after build · tracked</div>
+        <div style="margin-top:14px;font-size:12.5px;color:rgba(0,0,0,.5);line-height:1.6">Ships from the USA, 22 × 32 in and ~20 lb boxed · US delivery 3–5 days after build · tracked</div>
       </div>
     </div>
   </main>`;
