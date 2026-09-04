@@ -165,12 +165,8 @@ function header() {
   return `
   <header style="position:sticky;top:0;z-index:20;background:rgba(243,241,236,.88);backdrop-filter:blur(12px);border-bottom:1px solid rgba(0,0,0,.08)">
     <div style="max-width:1240px;margin:0 auto;padding:16px 32px;display:flex;align-items:center;gap:32px">
-      <div style="display:flex;align-items:center;gap:10px;margin-right:8px">
-        <div style="width:26px;height:34px;border-radius:4px;background:#12120f;display:flex;align-items:flex-end;justify-content:center;padding-bottom:5px"><div style="width:12px;height:16px;border-radius:2px;background:#f3f1ec"></div></div>
-        <div style="line-height:1">
-          <div style="font-family:'Archivo',sans-serif;font-weight:800;font-size:15px;letter-spacing:-.02em;text-transform:uppercase">Pitchside</div>
-          <div style="font-family:'Archivo',sans-serif;font-weight:600;font-size:9.5px;letter-spacing:.34em;color:rgba(0,0,0,.45);text-transform:uppercase">Displays</div>
-        </div>
+      <div style="display:flex;align-items:center;margin-right:8px">
+        <img src="/images/logo-light.png" alt="Pitchside Displays" style="height:60px;width:auto;display:block"/>
       </div>
       <nav style="display:flex;gap:26px;flex:1">
         ${navHtml}
