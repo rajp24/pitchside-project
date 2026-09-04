@@ -1,4 +1,4 @@
-// Pitchside Displays — storefront, customizer, checkout and admin mockup.
+// Pitchside Displays — storefront and admin mockup.
 // Implemented from the "Pitchside Displays.dc.html" Claude Design export as a
 // plain state -> render() -> DOM loop, no framework.
 
@@ -7,9 +7,6 @@ const CURRENCIES = [
   { code: 'EUR', sym: '€', price: 335, ship: 55 },
   { code: 'GBP', sym: '£', price: 285, ship: 48 },
 ];
-
-const FORMATIONS = { '4-3-3': [3, 3, 4, 1] };
-
 
 const SPECS = [
   { k: 'Outer size', v: '22 in × 32 in' }, { k: 'Slab slots', v: '11' },
@@ -76,12 +73,6 @@ let state = {
   screen: 'home',
   gi: 0,
   cur: 0,
-  team: 'Liverpool FC',
-  stadium: 'Anfield',
-  formation: '4-3-3',
-  extras: { Tifos: true, Flags: true, 'Player names': false },
-  notes: 'Champions League format/banners, night game, Liverpool flags.',
-  filled: [0, 1, 2, 4, 6, 10],
   remaining: FALLBACK_REMAINING,
 };
 
@@ -115,11 +106,6 @@ async function fetchBatchRemaining() {
   }
 }
 
-function configLine() {
-  const active = Object.keys(state.extras).filter((k) => state.extras[k]);
-  return `${state.team} · ${state.stadium}${active.length ? ' · ' + active.join(', ') : ''}`;
-}
-
 // -- markup pieces ----------------------------------------------------------
 
 function topBanner() {
@@ -127,10 +113,7 @@ function topBanner() {
 }
 
 function header() {
-  const nav = [
-    ['home', 'Product'],
-    ['customize', 'Build yours'],
-  ];
+  const nav = [['home', 'Product']];
   const navHtml = nav
     .map(
       ([screen, label]) =>
@@ -151,7 +134,11 @@ function header() {
         <div class="site-stock-pill" style="align-items:center;gap:7px;background:#b3261e;color:#fff;border-radius:999px;padding:7px 14px 7px 11px;font-family:'Archivo',sans-serif;font-weight:700;font-size:12px;letter-spacing:.04em;text-transform:uppercase;box-shadow:0 1px 8px rgba(179,38,30,.32)">
           <span style="width:7px;height:7px;border-radius:50%;background:#fff;animation:psd-pulse 1.4s ease-in-out infinite"></span>${esc(stockLine())}
         </div>
-        <button data-action="nav" data-screen="customize" class="btn-primary" style="color:#fff;border:0;border-radius:999px;padding:11px 22px;font-size:13.5px;font-weight:500;cursor:pointer">Order now</button>
+        ${
+          soldOut()
+            ? `<span class="btn-primary" aria-disabled="true" style="color:#fff;border:0;border-radius:999px;padding:11px 22px;font-size:13.5px;font-weight:500;cursor:not-allowed;opacity:.5">Sold out</span>`
+            : `<a href="https://buy.stripe.com/cNi14p6W78f8bWFcpJ7g402" class="btn-primary" style="color:#fff;border-radius:999px;padding:11px 22px;font-size:13.5px;font-weight:500">Order now</a>`
+        }
       </div>
     </div>
   </header>`;
@@ -341,104 +328,10 @@ function homeScreen() {
   </main>`;
 }
 
-function customizeScreen() {
-  const counts = FORMATIONS[state.formation];
-  let n = counts.reduce((a, b) => a + b, 0);
-  const rowsHtml = counts
-    .map((c) => {
-      const slots = [];
-      for (let i = 0; i < c; i++) {
-        const idx = --n;
-        const on = state.filled.indexOf(idx) !== -1;
-        slots.push(`
-          <button data-action="slot-toggle" data-idx="${idx}" style="width:19%;aspect-ratio:5/7;border-radius:5px;cursor:pointer;display:flex;align-items:center;justify-content:center;font-size:10px;font-family:'Archivo',sans-serif;font-weight:700;letter-spacing:.06em;border:1.5px solid ${on ? '#f7f6f2' : 'rgba(255,255,255,.3)'};background:${on ? '#f7f6f2' : 'rgba(255,255,255,.06)'};color:${on ? '#12120f' : 'rgba(255,255,255,.45)'};box-shadow:0 2px 10px rgba(0,0,0,.35)">${on ? 'PSA' : idx + 1}</button>`);
-      }
-      return `<div style="display:flex;gap:4.5%;justify-content:center">${slots.join('')}</div>`;
-    })
-    .join('');
-
-  const extraKeys = Object.keys(state.extras);
-  const extrasHtml = extraKeys
-    .map((k) => {
-      const on = state.extras[k];
-      return `<button data-action="extra-toggle" data-key="${esc(k)}" style="border-radius:999px;padding:10px 16px;font-size:13.5px;cursor:pointer;border:1px solid ${on ? '#12120f' : 'rgba(0,0,0,.14)'};background:${on ? '#12120f' : '#fff'};color:${on ? '#fff' : 'rgba(0,0,0,.65)'}">${esc(k)}</button>`;
-    })
-    .join('');
-
-  const price = CURRENCIES[state.cur].price;
-
-  return `
-  <main style="flex:1;max-width:1240px;margin:0 auto;padding:40px 32px 72px;width:100%;box-sizing:border-box">
-    <div style="display:flex;flex-wrap:wrap;gap:8px 20px;align-items:baseline;justify-content:space-between;margin-bottom:26px">
-      <h1 style="font-family:'Archivo',sans-serif;font-weight:800;font-size:34px;letter-spacing:-.03em;margin:0">Build your display</h1>
-      <div style="font-size:13.5px;color:rgba(0,0,0,.5)">Step 1 of 2 · ${esc(stockLine())}</div>
-    </div>
-
-    <div class="customize-grid">
-      <div class="sticky-panel" style="background:#12120f;border-radius:18px;padding:26px">
-        <div style="text-align:center;color:#fff;margin-bottom:18px">
-          <div style="font-family:'Archivo',sans-serif;font-weight:800;font-size:17px;letter-spacing:.06em;text-transform:uppercase">${esc(state.team)}</div>
-        </div>
-        <div style="position:relative;aspect-ratio:22/30;border-radius:6px;overflow:hidden;border:1px solid rgba(255,255,255,.22);background:linear-gradient(180deg,#0e0e0c 0%,#12140f 34%,rgba(31,107,79,.5) 72%,rgba(31,107,79,.72) 100%)">
-          <div style="position:absolute;left:7%;right:7%;top:5%;bottom:5%;border:1px solid rgba(255,255,255,.22)"></div>
-          <div style="position:absolute;left:30%;right:30%;top:5%;height:11%;border:1px solid rgba(255,255,255,.18);border-top:0"></div>
-          <div style="position:absolute;left:30%;right:30%;bottom:5%;height:11%;border:1px solid rgba(255,255,255,.18);border-bottom:0"></div>
-          <div style="position:absolute;left:7%;right:7%;top:50%;height:1px;background:rgba(255,255,255,.18)"></div>
-          <div style="position:absolute;left:50%;top:50%;width:26%;aspect-ratio:1;transform:translate(-50%,-50%);border:1px solid rgba(255,255,255,.18);border-radius:50%"></div>
-          <div style="position:absolute;left:11%;right:11%;top:9%;bottom:9%;display:flex;flex-direction:column;justify-content:space-between">${rowsHtml}</div>
-        </div>
-        <div style="display:flex;justify-content:space-between;align-items:center;margin-top:16px;color:rgba(255,255,255,.55);font-size:12.5px">
-          <span>${state.filled.length} of 11 slots marked</span>
-          <button data-action="reset-slots" style="background:none;border:1px solid rgba(255,255,255,.25);color:rgba(255,255,255,.8);border-radius:999px;padding:6px 14px;font-size:12px;cursor:pointer">Clear</button>
-        </div>
-        <p style="color:rgba(255,255,255,.4);font-size:12px;line-height:1.5;margin:14px 0 0">Tap a slot to mark which slabs you're mounting. Slots fit PSA, ACE and same-size graded cards.</p>
-      </div>
-
-      <div style="display:flex;flex-direction:column;gap:20px">
-        <div class="customize-form-grid" style="background:#fff;border:1px solid rgba(0,0,0,.08);border-radius:16px;padding:24px">
-          <div style="grid-column:1/-1;font-size:12.5px;color:rgba(0,0,0,.5)">Every case is built to order — your club, your stadium, your details. For example:</div>
-          <div>
-            <label style="display:block;font-size:12.5px;font-weight:500;margin-bottom:7px">Club</label>
-            <div style="width:100%;box-sizing:border-box;padding:13px 12px;border:1px solid rgba(0,0,0,.14);border-radius:10px;font-size:14.5px;background:#f7f6f2">${esc(state.team)}</div>
-          </div>
-          <div>
-            <label style="display:block;font-size:12.5px;font-weight:500;margin-bottom:7px">Stadium background</label>
-            <div style="width:100%;box-sizing:border-box;padding:13px 12px;border:1px solid rgba(0,0,0,.14);border-radius:10px;font-size:14.5px;background:#f7f6f2">${esc(state.stadium)}</div>
-          </div>
-          <div style="grid-column:1/-1">
-            <label style="display:block;font-size:12.5px;font-weight:500;margin-bottom:9px">Crowd extras</label>
-            <div style="display:flex;gap:10px;flex-wrap:wrap">${extrasHtml}</div>
-          </div>
-          <div style="grid-column:1/-1">
-            <label style="display:block;font-size:12.5px;font-weight:500;margin-bottom:7px">Additional notes</label>
-            <textarea data-action="set-notes" placeholder="Player names, a season, a shirt number under each slab, anything else." style="width:100%;box-sizing:border-box;min-height:96px;padding:13px 12px;border:1px solid rgba(0,0,0,.14);border-radius:10px;font-size:14.5px;resize:vertical">${esc(state.notes)}</textarea>
-          </div>
-        </div>
-
-        <div style="background:#fff;border:1px solid rgba(0,0,0,.08);border-radius:16px;padding:24px">
-          <div style="display:flex;justify-content:space-between;font-size:14.5px;padding-bottom:12px;border-bottom:1px solid rgba(0,0,0,.08)"><span style="color:rgba(0,0,0,.55)">Custom display case, 22 × 32 in</span><span>${money(price)}</span></div>
-          <div style="display:flex;justify-content:space-between;font-size:14.5px;padding:12px 0;border-bottom:1px solid rgba(0,0,0,.08)"><span style="color:rgba(0,0,0,.55)">${esc(configLine())}</span><span style="color:rgba(0,0,0,.45)">Included</span></div>
-          <div style="display:flex;justify-content:space-between;align-items:baseline;padding-top:16px">
-            <span style="font-family:'Archivo',sans-serif;font-weight:700;font-size:18px">Total</span>
-            <span style="font-family:'Archivo',sans-serif;font-weight:800;font-size:24px;letter-spacing:-.02em">${money(price)} <span style="font-size:13px;font-weight:500;color:rgba(0,0,0,.45)">+ shipping</span></span>
-          </div>
-          ${
-            soldOut()
-              ? `<span class="btn-primary" aria-disabled="true" style="display:block;width:100%;box-sizing:border-box;text-align:center;margin-top:18px;color:#fff;border:0;border-radius:12px;padding:18px;font-size:15.5px;font-weight:500;cursor:not-allowed;opacity:.5">Sold out</span>`
-              : `<a href="https://buy.stripe.com/cNi14p6W78f8bWFcpJ7g402" class="btn-primary" style="display:block;width:100%;box-sizing:border-box;text-align:center;margin-top:18px;color:#fff;border-radius:12px;padding:18px;font-size:15.5px;font-weight:500">Continue to checkout</a>`
-          }
-        </div>
-      </div>
-    </div>
-  </main>`;
-}
-
 // -- render + event wiring ---------------------------------------------------
 
 function screenHtml() {
   switch (state.screen) {
-    case 'customize':
-      return customizeScreen();
     case 'home':
     default:
       return homeScreen();
@@ -529,35 +422,6 @@ function bindEvents() {
         break;
       case 'currency-select':
         setState({ cur: Number(el.dataset.idx) });
-        break;
-      case 'slot-toggle': {
-        const idx = Number(el.dataset.idx);
-        setState((st) => ({
-          filled: st.filled.indexOf(idx) !== -1 ? st.filled.filter((x) => x !== idx) : st.filled.concat(idx),
-        }));
-        break;
-      }
-      case 'reset-slots':
-        setState({ filled: [] });
-        break;
-      case 'extra-toggle': {
-        const key = el.dataset.key;
-        setState((st) => ({ extras: { ...st.extras, [key]: !st.extras[key] } }));
-        break;
-      }
-      default:
-        break;
-    }
-  });
-
-  app.addEventListener('change', (e) => {
-    const el = e.target.closest('[data-action]');
-    if (!el) return;
-    const action = el.dataset.action;
-
-    switch (action) {
-      case 'set-notes':
-        setState({ notes: el.value });
         break;
       default:
         break;

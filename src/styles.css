@@ -92,8 +92,6 @@ button {
 .faq-outer-grid > *,
 .faq-row-grid > *,
 .footer-grid > *,
-.customize-grid > *,
-.customize-form-grid > *,
 .video-demo-grid > *,
 .admin-grid > * {
   min-width: 0;
@@ -149,24 +147,6 @@ button {
   gap: 36px;
 }
 
-.customize-grid {
-  display: grid;
-  grid-template-columns: 1fr 1fr;
-  gap: 28px;
-  align-items: start;
-}
-
-.sticky-panel {
-  position: sticky;
-  top: 88px;
-}
-
-.customize-form-grid {
-  display: grid;
-  grid-template-columns: 1fr 1fr;
-  gap: 18px;
-}
-
 /* Header: logo + order button stay on one row (the conversion-critical
    pair); nav drops to its own row underneath instead of squeezing in. */
 .site-header-inner {
@@ -208,14 +188,8 @@ button {
   .steps-grid,
   .faq-outer-grid,
   .faq-row-grid,
-  .footer-grid,
-  .customize-grid,
-  .customize-form-grid {
+  .footer-grid {
     grid-template-columns: 1fr;
-  }
-
-  .sticky-panel {
-    position: static;
   }
 
   .site-header-inner {
