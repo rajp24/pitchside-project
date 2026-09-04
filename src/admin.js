@@ -90,6 +90,9 @@ function loginView() {
           style="background:#12120f;color:#fff;border:0;border-radius:11px;padding:16px;font-size:15px;font-weight:500;cursor:pointer;margin-top:4px;opacity:${state.loggingIn ? '.6' : '1'}"
         >${state.loggingIn ? 'Signing in…' : 'Sign in'}</button>
       </form>
+      <div style="text-align:center;margin-top:18px">
+        <a href="/" style="font-size:13px;color:rgba(0,0,0,.5)">Go back home</a>
+      </div>
     </div>
   </div>`;
 }
