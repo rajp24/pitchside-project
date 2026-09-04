@@ -10,17 +10,6 @@ const CURRENCIES = [
 
 const FORMATIONS = { '4-3-3': [3, 3, 4, 1] };
 
-const TEAM_OPTIONS = [
-  'Team name here', 'Manchester United FC', 'Real Madrid CF', 'FC Barcelona', 'Arsenal FC',
-  'Liverpool FC', 'Chelsea FC', 'FC Bayern München', 'Paris Saint-Germain', 'AC Milan',
-  'Inter Milan', 'Borussia Dortmund', 'Ajax Amsterdam', 'Another club — tell us',
-];
-
-const STADIUM_OPTIONS = [
-  'Stadium name here', 'Old Trafford', 'Santiago Bernabéu', 'Spotify Camp Nou', 'Emirates Stadium',
-  'Anfield', 'Stamford Bridge', 'Allianz Arena', 'Parc des Princes', 'San Siro',
-  'Signal Iduna Park', 'Johan Cruijff Arena', 'Another stadium — tell us',
-];
 
 const SPECS = [
   { k: 'Outer size', v: '22 in × 32 in' }, { k: 'Slab slots', v: '11' },
@@ -101,11 +90,11 @@ let state = {
   screen: 'home',
   gi: 0,
   cur: 0,
-  team: 'Team name here',
-  stadium: 'Stadium name here',
+  team: 'Liverpool FC',
+  stadium: 'Anfield',
   formation: '4-3-3',
   extras: { Tifos: true, Flags: true, 'Player names': false },
-  notes: '',
+  notes: 'Front three: Salah, Núñez, Díaz — home kit, 2023/24 season.',
   filled: [0, 1, 2, 4, 6, 10],
   pay: 0,
   remaining: FALLBACK_REMAINING,
@@ -384,9 +373,6 @@ function customizeScreen() {
     })
     .join('');
 
-  const teamOptsHtml = TEAM_OPTIONS.map((t) => `<option value="${esc(t)}" ${t === state.team ? 'selected' : ''}>${esc(t)}</option>`).join('');
-  const stadiumOptsHtml = STADIUM_OPTIONS.map((s) => `<option value="${esc(s)}" ${s === state.stadium ? 'selected' : ''}>${esc(s)}</option>`).join('');
-
   const extraKeys = Object.keys(state.extras);
   const extrasHtml = extraKeys
     .map((k) => {
@@ -426,13 +412,14 @@ function customizeScreen() {
 
       <div style="display:flex;flex-direction:column;gap:20px">
         <div style="background:#fff;border:1px solid rgba(0,0,0,.08);border-radius:16px;padding:24px;display:grid;grid-template-columns:1fr 1fr;gap:18px">
+          <div style="grid-column:1/-1;font-size:12.5px;color:rgba(0,0,0,.5)">Every case is built to order — your club, your stadium, your details. For example:</div>
           <div>
             <label style="display:block;font-size:12.5px;font-weight:500;margin-bottom:7px">Club</label>
-            <select data-action="set-team" style="width:100%;box-sizing:border-box;padding:13px 12px;border:1px solid rgba(0,0,0,.14);border-radius:10px;font-size:14.5px;background:#fff">${teamOptsHtml}</select>
+            <div style="width:100%;box-sizing:border-box;padding:13px 12px;border:1px solid rgba(0,0,0,.14);border-radius:10px;font-size:14.5px;background:#f7f6f2">${esc(state.team)}</div>
           </div>
           <div>
             <label style="display:block;font-size:12.5px;font-weight:500;margin-bottom:7px">Stadium background</label>
-            <select data-action="set-stadium" style="width:100%;box-sizing:border-box;padding:13px 12px;border:1px solid rgba(0,0,0,.14);border-radius:10px;font-size:14.5px;background:#fff">${stadiumOptsHtml}</select>
+            <div style="width:100%;box-sizing:border-box;padding:13px 12px;border:1px solid rgba(0,0,0,.14);border-radius:10px;font-size:14.5px;background:#f7f6f2">${esc(state.stadium)}</div>
           </div>
           <div style="grid-column:1/-1">
             <label style="display:block;font-size:12.5px;font-weight:500;margin-bottom:9px">Crowd extras</label>
@@ -451,7 +438,11 @@ function customizeScreen() {
             <span style="font-family:'Archivo',sans-serif;font-weight:700;font-size:18px">Total</span>
             <span style="font-family:'Archivo',sans-serif;font-weight:800;font-size:24px;letter-spacing:-.02em">${money(price)} <span style="font-size:13px;font-weight:500;color:rgba(0,0,0,.45)">+ shipping</span></span>
           </div>
-          <button data-action="nav" data-screen="checkout" class="btn-primary" style="width:100%;margin-top:18px;color:#fff;border:0;border-radius:12px;padding:18px;font-size:15.5px;font-weight:500;cursor:pointer">Continue to checkout</button>
+          ${
+            soldOut()
+              ? `<span class="btn-primary" aria-disabled="true" style="display:block;width:100%;box-sizing:border-box;text-align:center;margin-top:18px;color:#fff;border:0;border-radius:12px;padding:18px;font-size:15.5px;font-weight:500;cursor:not-allowed;opacity:.5">Sold out</span>`
+              : `<a href="https://buy.stripe.com/cNi14p6W78f8bWFcpJ7g402" class="btn-primary" style="display:block;width:100%;box-sizing:border-box;text-align:center;margin-top:18px;color:#fff;border-radius:12px;padding:18px;font-size:15.5px;font-weight:500">Continue to checkout</a>`
+          }
         </div>
       </div>
     </div>
@@ -662,12 +653,6 @@ function bindEvents() {
     const action = el.dataset.action;
 
     switch (action) {
-      case 'set-team':
-        setState({ team: el.value });
-        break;
-      case 'set-stadium':
-        setState({ stadium: el.value });
-        break;
       case 'set-notes':
         setState({ notes: el.value });
         break;
