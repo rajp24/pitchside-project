@@ -67,8 +67,16 @@ button {
   align-items: center;
 }
 
+.admin-grid {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 24px;
+  align-items: start;
+}
+
 @media (max-width: 780px) {
-  .video-demo-grid {
+  .video-demo-grid,
+  .admin-grid {
     grid-template-columns: 1fr;
   }
 }

@@ -57,22 +57,6 @@ const PAY_METHODS = [
   { name: 'Apple Pay / Google Pay', note: 'One-tap on mobile' },
 ];
 
-const ORDERS = [
-  { ref: 'PSD-114', name: 'J. Whitfield', place: 'Chicago, IL', build: 'Man United · Old Trafford · 4-3-3', status: 'New', total: '$350' },
-  { ref: 'PSD-113', name: 'M. Rossi', place: 'Newark, NJ', build: 'AC Milan · San Siro · 4-4-2', status: 'In build', total: '$350' },
-  { ref: 'PSD-112', name: 'A. Keller', place: 'Austin, TX', build: 'Bayern · Allianz Arena · 4-3-3', status: 'In build', total: '$350' },
-  { ref: 'PSD-111', name: 'J. Moreau', place: 'Lyon, FR', build: 'PSG · Parc des Princes · 3-5-2', status: 'Approval', total: '€335' },
-  { ref: 'PSD-110', name: 'S. Ahmed', place: 'London, UK', build: 'Arsenal · Emirates · 4-3-3', status: 'Shipped', total: '£285' },
-  { ref: 'PSD-109', name: 'D. Ortiz', place: 'Miami, FL', build: 'Real Madrid · Bernabéu · 4-3-3', status: 'Shipped', total: '$350' },
-];
-
-const STATUS_COLORS = {
-  New: ['#eef3ef', '#1f6b4f'],
-  'In build': ['#f4f1e7', '#8a6d1f'],
-  Approval: ['#f1f0f5', '#4a4a63'],
-  Shipped: ['#f0f0ef', 'rgba(0,0,0,.5)'],
-};
-
 const SHOT_LABELS = [
   'Hinged front, eleven slots ready',
   'Mounted on a mantel, 4-3-3',
@@ -99,6 +83,10 @@ function prefersReducedMotion() {
   return window.matchMedia('(prefers-reduced-motion: reduce)').matches;
 }
 
+// Shown until /api/batch resolves (or if it fails) — never render an empty
+// or collapsed stock line while the real number loads.
+const FALLBACK_REMAINING = 12;
+
 let state = {
   screen: 'home',
   gi: 0,
@@ -109,17 +97,8 @@ let state = {
   extras: { Tifos: true, Flags: true, 'Player names': false },
   notes: '',
   filled: [0, 1, 2, 4, 6, 10],
-  authed: false,
-  limit: 20,
-  sold: 8,
   pay: 0,
-  items: [
-    { name: 'Custom display case 22×30', price: '$350' },
-    { name: 'Extra slab holder (set of 3)', price: '$20' },
-    { name: 'Wall mount kit', price: '$14' },
-  ],
-  newItemName: '',
-  newItemPrice: '',
+  remaining: FALLBACK_REMAINING,
 };
 
 function setState(patch) {
@@ -131,12 +110,25 @@ function money(n) {
   return CURRENCIES[state.cur].sym + n;
 }
 
-function remaining() {
-  return Math.max(0, state.limit - state.sold);
+function soldOut() {
+  return state.remaining === 0;
 }
 
 function stockLine() {
-  return `Only ${remaining()} left in this batch`;
+  return soldOut() ? 'Sold out' : `Only ${state.remaining} left in this batch`;
+}
+
+async function fetchBatchRemaining() {
+  try {
+    const res = await fetch('/api/batch');
+    if (!res.ok) return;
+    const data = await res.json();
+    if (Number.isInteger(data.remaining)) {
+      setState({ remaining: data.remaining });
+    }
+  } catch {
+    // network error or offline — keep showing the fallback value
+  }
 }
 
 function configLine() {
@@ -170,7 +162,7 @@ function header() {
       </div>
       <nav style="display:flex;gap:26px;flex:1">
         ${navHtml}
-        <button data-action="nav" data-screen="admin" class="nav-link" style="background:none;border:0;padding:6px 0;font-size:14px;color:rgba(0,0,0,.45);cursor:pointer">Admin</button>
+        <a href="/admin" class="nav-link" style="padding:6px 0;font-size:14px;color:rgba(0,0,0,.45)">Admin</a>
       </nav>
       <div style="display:flex;align-items:center;gap:14px">
         <div style="display:inline-flex;align-items:center;gap:7px;background:#b3261e;color:#fff;border-radius:999px;padding:7px 14px 7px 11px;font-family:'Archivo',sans-serif;font-weight:700;font-size:12px;letter-spacing:.04em;text-transform:uppercase;box-shadow:0 1px 8px rgba(179,38,30,.32)">
@@ -283,18 +275,16 @@ function homeScreen() {
         <div style="display:grid;grid-template-columns:1fr 1fr;gap:1px;background:rgba(0,0,0,.08);border:1px solid rgba(0,0,0,.08);border-radius:14px;overflow:hidden;margin:28px 0 0">${specsHtml}</div>
 
         <div style="display:flex;gap:12px;margin-top:26px">
-          <button data-action="nav" data-screen="customize" style="flex:1;background:#12120f;color:#fff;border:0;border-radius:12px;padding:19px 26px;font-size:15.5px;font-weight:500;cursor:pointer;display:flex;align-items:center;justify-content:center;gap:10px">Start your custom order <span style="font-size:17px">→</span></button>
+          <button
+            data-action="nav" data-screen="customize"
+            ${soldOut() ? 'disabled' : ''}
+            style="flex:1;background:#12120f;color:#fff;border:0;border-radius:12px;padding:19px 26px;font-size:15.5px;font-weight:500;cursor:${soldOut() ? 'not-allowed' : 'pointer'};display:flex;align-items:center;justify-content:center;gap:10px;opacity:${soldOut() ? '.5' : '1'}"
+          >${soldOut() ? 'Sold out' : 'Start your custom order'} ${soldOut() ? '' : '<span style="font-size:17px">→</span>'}</button>
           <a href="https://instagram.com/pitchsidedisplays" target="_blank" rel="noopener" style="border:1px solid rgba(0,0,0,.14);border-radius:12px;padding:19px 22px;font-size:15px;color:#12120f;display:flex;align-items:center">See it on IG</a>
         </div>
         <div style="margin-top:22px;border:1px solid rgba(179,38,30,.28);background:rgba(179,38,30,.05);border-radius:14px;padding:16px 18px">
-          <div style="display:flex;align-items:baseline;justify-content:space-between;gap:16px">
-            <div style="font-family:'Archivo',sans-serif;font-weight:800;font-size:15px;letter-spacing:-.01em;color:#b3261e">${esc(stockLine())}</div>
-            <div style="font-size:12.5px;color:rgba(0,0,0,.5)">${state.sold} of ${state.limit} claimed</div>
-          </div>
-          <div style="height:5px;border-radius:999px;background:rgba(179,38,30,.15);margin-top:11px;overflow:hidden">
-            <div style="height:100%;border-radius:999px;background:#b3261e;width:${Math.round((state.sold / state.limit) * 100)}%"></div>
-          </div>
-          <div style="margin-top:11px;font-size:12.5px;color:rgba(0,0,0,.55);line-height:1.5">Each batch is built by hand. When it's gone, the next one opens in January.</div>
+          <div style="font-family:'Archivo',sans-serif;font-weight:800;font-size:15px;letter-spacing:-.01em;color:#b3261e">${esc(stockLine())}</div>
+          <div style="margin-top:8px;font-size:12.5px;color:rgba(0,0,0,.55);line-height:1.5">${soldOut() ? "This batch has sold out. The next one opens in January." : "Each batch is built by hand. When it's gone, the next one opens in January."}</div>
         </div>
         <div style="margin-top:14px;display:flex;gap:14px;font-size:13px;color:rgba(0,0,0,.5)">
           <span>4–6 week build</span><span>·</span><span>Ships from the USA</span><span>·</span><span>Tracked UPS delivery</span>
@@ -345,7 +335,11 @@ function homeScreen() {
               <div style="font-size:13.5px;color:rgba(0,0,0,.55);margin-top:3px">Cuts glare under direct light</div>
             </div>
           </div>
-          <button data-action="nav" data-screen="customize" style="margin-top:28px;background:#12120f;color:#fff;border:0;border-radius:12px;padding:16px 24px;font-size:14.5px;font-weight:500;cursor:pointer">Start your custom order</button>
+          <button
+            data-action="nav" data-screen="customize"
+            ${soldOut() ? 'disabled' : ''}
+            style="margin-top:28px;background:#12120f;color:#fff;border:0;border-radius:12px;padding:16px 24px;font-size:14.5px;font-weight:500;cursor:${soldOut() ? 'not-allowed' : 'pointer'};opacity:${soldOut() ? '.5' : '1'}"
+          >${soldOut() ? 'Sold out' : 'Start your custom order'}</button>
         </div>
       </div>
     </section>
@@ -533,113 +527,6 @@ function checkoutScreen() {
   </main>`;
 }
 
-function adminScreen() {
-  if (!state.authed) {
-    return `
-    <main style="flex:1;width:100%">
-      <div style="max-width:400px;margin:0 auto;padding:96px 32px">
-        <h1 style="font-family:'Archivo',sans-serif;font-weight:800;font-size:26px;letter-spacing:-.02em;margin:0 0 6px">Admin login</h1>
-        <p style="font-size:14px;color:rgba(0,0,0,.55);margin:0 0 24px">Orders, stock limits and catalogue.</p>
-        <div style="background:#fff;border:1px solid rgba(0,0,0,.08);border-radius:16px;padding:24px;display:flex;flex-direction:column;gap:14px">
-          <div>
-            <label style="display:block;font-size:12.5px;font-weight:500;margin-bottom:7px">Email</label>
-            <input placeholder="pitchsidedisplays@gmail.com" style="width:100%;box-sizing:border-box;padding:13px 12px;border:1px solid rgba(0,0,0,.14);border-radius:10px;font-size:14.5px"/>
-          </div>
-          <div>
-            <label style="display:block;font-size:12.5px;font-weight:500;margin-bottom:7px">Password</label>
-            <input type="password" placeholder="••••••••" style="width:100%;box-sizing:border-box;padding:13px 12px;border:1px solid rgba(0,0,0,.14);border-radius:10px;font-size:14.5px"/>
-          </div>
-          <button data-action="login" style="background:#12120f;color:#fff;border:0;border-radius:11px;padding:16px;font-size:15px;font-weight:500;cursor:pointer;margin-top:4px">Sign in</button>
-        </div>
-      </div>
-    </main>`;
-  }
-
-  const stats = [
-    { k: 'Outstanding', v: '4', note: 'in build or awaiting approval' },
-    { k: 'Sold this batch', v: String(state.sold), note: `${remaining()} still listed` },
-    { k: 'Revenue (30d)', v: '$2,800', note: '8 orders' },
-    { k: 'Avg build time', v: '31d', note: 'approval to shipped' },
-  ];
-  const statsHtml = stats
-    .map(
-      (st) => `
-    <div style="background:#fff;border:1px solid rgba(0,0,0,.08);border-radius:14px;padding:20px">
-      <div style="font-size:11px;letter-spacing:.12em;text-transform:uppercase;color:rgba(0,0,0,.42);font-family:'Archivo',sans-serif;font-weight:600">${esc(st.k)}</div>
-      <div style="font-family:'Archivo',sans-serif;font-weight:800;font-size:28px;letter-spacing:-.02em;margin-top:8px">${esc(st.v)}</div>
-      <div style="font-size:12.5px;color:rgba(0,0,0,.45);margin-top:4px">${esc(st.note)}</div>
-    </div>`
-    )
-    .join('');
-
-  const ordersHtml = ORDERS.map((o) => {
-    const [bg, fg] = STATUS_COLORS[o.status];
-    return `
-    <div style="display:grid;grid-template-columns:76px 1fr 1.25fr 92px 76px;column-gap:16px;padding:15px 22px;font-size:13.5px;align-items:center;border-bottom:1px solid rgba(0,0,0,.05)">
-      <div style="font-family:'Archivo',sans-serif;font-weight:700;font-size:12.5px">${esc(o.ref)}</div>
-      <div><div>${esc(o.name)}</div><div style="font-size:12px;color:rgba(0,0,0,.45);margin-top:2px">${esc(o.place)}</div></div>
-      <div style="color:rgba(0,0,0,.6);font-size:13px">${esc(o.build)}</div>
-      <div><span style="display:inline-block;font-size:11.5px;padding:5px 10px;border-radius:999px;background:${bg};color:${fg}">${esc(o.status)}</span></div>
-      <div style="text-align:right">${esc(o.total)}</div>
-    </div>`;
-  }).join('');
-
-  const itemsHtml = state.items
-    .map(
-      (it) => `
-    <div style="display:flex;justify-content:space-between;font-size:14px;padding:11px 0;border-bottom:1px solid rgba(0,0,0,.06)"><span>${esc(it.name)}</span><span style="color:rgba(0,0,0,.55)">${esc(it.price)}</span></div>`
-    )
-    .join('');
-
-  return `
-  <main style="flex:1;width:100%">
-    <div style="max-width:1240px;margin:0 auto;padding:36px 32px 72px">
-      <div style="display:flex;align-items:baseline;justify-content:space-between;margin-bottom:24px">
-        <h1 style="font-family:'Archivo',sans-serif;font-weight:800;font-size:30px;letter-spacing:-.03em;margin:0">Dashboard</h1>
-        <button data-action="logout" style="background:none;border:1px solid rgba(0,0,0,.14);border-radius:999px;padding:9px 18px;font-size:13px;cursor:pointer">Sign out</button>
-      </div>
-
-      <div style="display:grid;grid-template-columns:repeat(4,1fr);gap:16px;margin-bottom:24px">${statsHtml}</div>
-
-      <div style="display:grid;grid-template-columns:1.5fr .85fr;gap:24px;align-items:start">
-        <div style="background:#fff;border:1px solid rgba(0,0,0,.08);border-radius:16px;overflow:hidden">
-          <div style="padding:20px 22px;border-bottom:1px solid rgba(0,0,0,.08);display:flex;justify-content:space-between;align-items:center">
-            <div style="font-family:'Archivo',sans-serif;font-weight:700;font-size:12px;letter-spacing:.14em;text-transform:uppercase;color:rgba(0,0,0,.45)">Orders</div>
-            <div style="font-size:12.5px;color:rgba(0,0,0,.45)">${ORDERS.length} total</div>
-          </div>
-          <div style="display:grid;grid-template-columns:76px 1fr 1.25fr 92px 76px;column-gap:16px;padding:12px 22px;font-size:11px;letter-spacing:.1em;text-transform:uppercase;color:rgba(0,0,0,.4);font-family:'Archivo',sans-serif;font-weight:600;border-bottom:1px solid rgba(0,0,0,.06)">
-            <div>Ref</div><div>Customer</div><div>Build</div><div>Status</div><div style="text-align:right">Total</div>
-          </div>
-          ${ordersHtml}
-        </div>
-
-        <div style="display:flex;flex-direction:column;gap:20px">
-          <div style="background:#fff;border:1px solid rgba(0,0,0,.08);border-radius:16px;padding:22px">
-            <div style="font-family:'Archivo',sans-serif;font-weight:700;font-size:12px;letter-spacing:.14em;text-transform:uppercase;color:rgba(0,0,0,.45)">Batch limit</div>
-            <p style="font-size:13px;color:rgba(0,0,0,.55);line-height:1.5;margin:10px 0 16px">The number shown on the storefront as remaining.</p>
-            <div style="display:flex;align-items:center;gap:14px">
-              <button data-action="dec-limit" style="width:40px;height:40px;border-radius:10px;border:1px solid rgba(0,0,0,.14);background:#fff;font-size:19px;cursor:pointer">−</button>
-              <div style="font-family:'Archivo',sans-serif;font-weight:800;font-size:30px;min-width:52px;text-align:center">${state.limit}</div>
-              <button data-action="inc-limit" style="width:40px;height:40px;border-radius:10px;border:1px solid rgba(0,0,0,.14);background:#fff;font-size:19px;cursor:pointer">+</button>
-              <div style="font-size:13px;color:rgba(0,0,0,.5);margin-left:4px">${esc(stockLine())}</div>
-            </div>
-          </div>
-
-          <div style="background:#fff;border:1px solid rgba(0,0,0,.08);border-radius:16px;padding:22px">
-            <div style="font-family:'Archivo',sans-serif;font-weight:700;font-size:12px;letter-spacing:.14em;text-transform:uppercase;color:rgba(0,0,0,.45);margin-bottom:16px">Catalogue</div>
-            ${itemsHtml}
-            <div style="display:flex;gap:8px;margin-top:16px">
-              <input data-action="set-item-name" value="${esc(state.newItemName)}" placeholder="Item name" style="flex:1;min-width:0;padding:11px;border:1px solid rgba(0,0,0,.14);border-radius:9px;font-size:13.5px"/>
-              <input data-action="set-item-price" value="${esc(state.newItemPrice)}" placeholder="Price" style="width:74px;padding:11px;border:1px solid rgba(0,0,0,.14);border-radius:9px;font-size:13.5px"/>
-              <button data-action="add-item" style="background:#12120f;color:#fff;border:0;border-radius:9px;padding:11px 16px;font-size:13.5px;cursor:pointer">Add</button>
-            </div>
-          </div>
-        </div>
-      </div>
-    </div>
-  </main>`;
-}
-
 // -- render + event wiring ---------------------------------------------------
 
 function screenHtml() {
@@ -648,8 +535,6 @@ function screenHtml() {
       return customizeScreen();
     case 'checkout':
       return checkoutScreen();
-    case 'admin':
-      return adminScreen();
     case 'home':
     default:
       return homeScreen();
@@ -727,31 +612,8 @@ function bindEvents() {
         setState((st) => ({ extras: { ...st.extras, [key]: !st.extras[key] } }));
         break;
       }
-      case 'login':
-        setState({ authed: true });
-        break;
-      case 'logout':
-        setState({ authed: false });
-        break;
-      case 'inc-limit':
-        setState((st) => ({ limit: st.limit + 1 }));
-        break;
-      case 'dec-limit':
-        setState((st) => ({ limit: Math.max(st.sold, st.limit - 1) }));
-        break;
       case 'pay-select':
         setState({ pay: Number(el.dataset.idx) });
-        break;
-      case 'add-item':
-        setState((st) =>
-          st.newItemName
-            ? {
-                items: st.items.concat({ name: st.newItemName, price: st.newItemPrice || '—' }),
-                newItemName: '',
-                newItemPrice: '',
-              }
-            : {}
-        );
         break;
       default:
         break;
@@ -773,12 +635,6 @@ function bindEvents() {
       case 'set-notes':
         setState({ notes: el.value });
         break;
-      case 'set-item-name':
-        setState({ newItemName: el.value });
-        break;
-      case 'set-item-price':
-        setState({ newItemPrice: el.value });
-        break;
       default:
         break;
     }
@@ -789,6 +645,7 @@ function init() {
   bindEvents();
   render();
   window.addEventListener('beforeunload', () => videoObserver?.disconnect());
+  fetchBatchRemaining();
 }
 
 document.addEventListener('DOMContentLoaded', init);

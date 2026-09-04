@@ -8,6 +8,9 @@
     "build": "vite build",
     "preview": "vite preview"
   },
+  "dependencies": {
+    "@upstash/redis": "^1.38.3"
+  },
   "devDependencies": {
     "vite": "^5.4.0"
   }
