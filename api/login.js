@@ -1,4 +1,4 @@
-import { redis } from './_lib/redis.js';
+import { redis, missingRedisEnvVar } from './_lib/redis.js';
 import { serializeCookie } from './_lib/cookies.js';
 import { createSession, SESSION_COOKIE, SESSION_TTL_SECONDS } from './_lib/session.js';
 
@@ -17,6 +17,11 @@ export default async function handler(req, res) {
   if (req.method !== 'POST') {
     res.setHeader('Allow', 'POST');
     return res.status(405).json({ error: 'Method not allowed' });
+  }
+
+  const missingEnvVar = missingRedisEnvVar();
+  if (missingEnvVar) {
+    return res.status(500).json({ error: `Server misconfigured: missing ${missingEnvVar} env var` });
   }
 
   const ip = getClientIp(req);

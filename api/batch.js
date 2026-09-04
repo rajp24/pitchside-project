@@ -1,9 +1,14 @@
-import { redis } from './_lib/redis.js';
+import { redis, missingRedisEnvVar } from './_lib/redis.js';
 import { isValidSession } from './_lib/session.js';
 
 const KEY = 'batch:remaining';
 
 export default async function handler(req, res) {
+  const missingEnvVar = missingRedisEnvVar();
+  if (missingEnvVar) {
+    return res.status(500).json({ error: `Server misconfigured: missing ${missingEnvVar} env var` });
+  }
+
   if (req.method === 'GET') {
     const raw = await redis.get(KEY);
     const remaining = Number.isInteger(raw) ? raw : 0;

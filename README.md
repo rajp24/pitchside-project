@@ -60,10 +60,12 @@ vercel install upstash
 ```
 
 (or from the Vercel dashboard: Project → Storage → Create Database →
-Upstash → Redis). This sets `KV_REST_API_URL` / `KV_REST_API_TOKEN` (or
-`UPSTASH_REDIS_REST_URL` / `UPSTASH_REDIS_REST_TOKEN`, depending on how the
-integration was added — `api/_lib/redis.js` accepts either pair) on the
-Vercel project automatically.
+Upstash → Redis). This sets several env vars on the project automatically;
+`api/_lib/redis.js` uses `KV_REST_API_URL` and `KV_REST_API_TOKEN`
+specifically (the full read-write token — `/api/batch` writes, so the
+read-only one won't work). If a handler returns a 500 with "Server
+misconfigured: missing ... env var", that names exactly which of the two
+isn't set.
 
 Also set, in the Vercel project's Environment Variables:
 
