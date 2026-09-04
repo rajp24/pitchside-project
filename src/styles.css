@@ -94,8 +94,6 @@ button {
 .footer-grid > *,
 .customize-grid > *,
 .customize-form-grid > *,
-.checkout-grid > *,
-.checkout-fields-grid > *,
 .video-demo-grid > *,
 .admin-grid > * {
   min-width: 0;
@@ -169,19 +167,6 @@ button {
   gap: 18px;
 }
 
-.checkout-grid {
-  display: grid;
-  grid-template-columns: 1.15fr 0.85fr;
-  gap: 28px;
-  align-items: start;
-}
-
-.checkout-fields-grid {
-  display: grid;
-  grid-template-columns: 1fr 1fr;
-  gap: 16px;
-}
-
 /* Header: logo + order button stay on one row (the conversion-critical
    pair); nav drops to its own row underneath instead of squeezing in. */
 .site-header-inner {
@@ -225,9 +210,7 @@ button {
   .faq-row-grid,
   .footer-grid,
   .customize-grid,
-  .customize-form-grid,
-  .checkout-grid,
-  .checkout-fields-grid {
+  .customize-form-grid {
     grid-template-columns: 1fr;
   }
 

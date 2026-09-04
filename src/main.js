@@ -31,20 +31,6 @@ const FAQS = [
   { q: 'Where do you ship?', a: 'Everything ships from the USA, worldwide on request. Tracked with UPS.' },
 ];
 
-const CHECKOUT_FIELDS = [
-  { label: 'Full name', ph: 'Your name', full: true }, { label: 'Email', ph: 'you@example.com', full: false },
-  { label: 'Phone', ph: '(555) 123-4567', full: false }, { label: 'Address', ph: 'Street and number', full: true },
-  { label: 'City', ph: 'Chicago', full: false }, { label: 'State / ZIP', ph: 'IL 60601', full: false },
-  { label: 'Country', ph: 'United States', full: true },
-];
-
-const PAY_METHODS = [
-  { name: 'Card', note: 'Visa, Mastercard, Amex — via Shopify Payments' },
-  { name: 'Shop Pay', note: 'Pay in 4 interest-free installments' },
-  { name: 'PayPal', note: 'Buyer protection included' },
-  { name: 'Apple Pay / Google Pay', note: 'One-tap on mobile' },
-];
-
 const SHOT_LABELS = [
   'Hinged front, eleven slots ready',
   'Mounted on a mantel',
@@ -96,7 +82,6 @@ let state = {
   extras: { Tifos: true, Flags: true, 'Player names': false },
   notes: 'Front three: Salah, Núñez, Díaz — home kit, 2023/24 season.',
   filled: [0, 1, 2, 4, 6, 10],
-  pay: 0,
   remaining: FALLBACK_REMAINING,
 };
 
@@ -145,7 +130,6 @@ function header() {
   const nav = [
     ['home', 'Product'],
     ['customize', 'Build yours'],
-    ['checkout', 'Checkout'],
   ];
   const navHtml = nav
     .map(
@@ -449,90 +433,12 @@ function customizeScreen() {
   </main>`;
 }
 
-function checkoutScreen() {
-  const price = CURRENCIES[state.cur].price;
-  const ship = CURRENCIES[state.cur].ship;
-  const totals = [
-    { k: 'Subtotal', v: money(price) },
-    { k: 'Shipping (tracked, from USA)', v: money(ship) },
-    { k: 'Sales tax', v: 'Calculated at payment' },
-  ];
-
-  const fieldsHtml = CHECKOUT_FIELDS.map(
-    (f) => `
-    <div style="grid-column:${f.full ? '1/-1' : 'auto'}">
-      <label style="display:block;font-size:12.5px;font-weight:500;margin-bottom:7px">${esc(f.label)}</label>
-      <input placeholder="${esc(f.ph)}" style="width:100%;box-sizing:border-box;padding:13px 12px;border:1px solid rgba(0,0,0,.14);border-radius:10px;font-size:14.5px"/>
-    </div>`
-  ).join('');
-
-  const payHtml = PAY_METHODS.map((pm, i) => {
-    const on = state.pay === i;
-    return `
-    <button data-action="pay-select" data-idx="${i}" style="display:flex;align-items:center;gap:14px;text-align:left;border-radius:12px;padding:16px 18px;cursor:pointer;border:1.5px solid ${on ? '#12120f' : 'rgba(0,0,0,.12)'};background:${on ? '#f7f6f2' : '#fff'}">
-      <span style="width:16px;height:16px;border-radius:50%;border:1.5px solid ${on ? '#12120f' : 'rgba(0,0,0,.3)'};background:${on ? '#12120f' : 'transparent'};flex:none"></span>
-      <span style="flex:1">
-        <span style="display:block;font-size:14.5px;font-weight:500">${esc(pm.name)}</span>
-        <span style="display:block;font-size:12.5px;color:rgba(0,0,0,.5);margin-top:2px">${esc(pm.note)}</span>
-      </span>
-    </button>`;
-  }).join('');
-
-  const totalsHtml = totals
-    .map(
-      (row) => `
-    <div style="display:flex;justify-content:space-between;font-size:14px;padding:11px 0;border-bottom:1px solid rgba(0,0,0,.06)"><span style="color:rgba(0,0,0,.55)">${esc(row.k)}</span><span>${esc(row.v)}</span></div>`
-    )
-    .join('');
-
-  const totalLabel = money(price + ship);
-
-  return `
-  <main style="flex:1;max-width:1040px;margin:0 auto;padding:40px 32px 72px;width:100%;box-sizing:border-box">
-    <h1 style="font-family:'Archivo',sans-serif;font-weight:800;font-size:34px;letter-spacing:-.03em;margin:0 0 26px">Checkout</h1>
-    <div class="checkout-grid">
-      <div style="display:flex;flex-direction:column;gap:20px">
-        <div style="background:#fff;border:1px solid rgba(0,0,0,.08);border-radius:16px;padding:24px">
-          <div style="font-family:'Archivo',sans-serif;font-weight:700;font-size:12px;letter-spacing:.14em;text-transform:uppercase;color:rgba(0,0,0,.45);margin-bottom:18px">Contact &amp; delivery</div>
-          <div class="checkout-fields-grid">${fieldsHtml}</div>
-        </div>
-
-        <div style="background:#fff;border:1px solid rgba(0,0,0,.08);border-radius:16px;padding:24px">
-          <div style="font-family:'Archivo',sans-serif;font-weight:700;font-size:12px;letter-spacing:.14em;text-transform:uppercase;color:rgba(0,0,0,.45);margin-bottom:18px">Payment</div>
-          <div style="display:flex;flex-direction:column;gap:10px">${payHtml}</div>
-          <p style="font-size:12.5px;color:rgba(0,0,0,.45);line-height:1.5;margin:16px 0 0">Mockup only — the live site routes this to a hosted checkout, so no card data touches the site.</p>
-        </div>
-      </div>
-
-      <div class="sticky-panel" style="background:#fff;border:1px solid rgba(0,0,0,.08);border-radius:16px;padding:24px">
-        <div style="font-family:'Archivo',sans-serif;font-weight:700;font-size:12px;letter-spacing:.14em;text-transform:uppercase;color:rgba(0,0,0,.45);margin-bottom:16px">Order summary</div>
-        <div style="display:flex;gap:14px;padding-bottom:16px;border-bottom:1px solid rgba(0,0,0,.08)">
-          <div style="width:64px;height:86px;border-radius:8px;overflow:hidden;background:#efece6;flex:none"><img class="fade-img" src="${SHOTS[state.gi].src}" alt="" style="width:100%;height:100%;object-fit:cover"/></div>
-          <div>
-            <div style="font-size:14.5px;font-weight:500">Custom display case</div>
-            <div style="font-size:12.5px;color:rgba(0,0,0,.5);margin-top:4px;line-height:1.5">${esc(configLine())}</div>
-          </div>
-        </div>
-        ${totalsHtml}
-        <div style="display:flex;justify-content:space-between;align-items:baseline;padding-top:16px">
-          <span style="font-family:'Archivo',sans-serif;font-weight:700;font-size:17px">Total</span>
-          <span style="font-family:'Archivo',sans-serif;font-weight:800;font-size:24px;letter-spacing:-.02em">${totalLabel}</span>
-        </div>
-        <button class="btn-primary" style="width:100%;margin-top:18px;color:#fff;border:0;border-radius:12px;padding:18px;font-size:15.5px;font-weight:500;cursor:pointer">Pay ${totalLabel}</button>
-        <div style="margin-top:14px;font-size:12.5px;color:rgba(0,0,0,.5);line-height:1.6">Ships from the USA, 22 × 32 in and ~20 lb boxed · US delivery 3–5 days after build · tracked</div>
-      </div>
-    </div>
-  </main>`;
-}
-
 // -- render + event wiring ---------------------------------------------------
 
 function screenHtml() {
   switch (state.screen) {
     case 'customize':
       return customizeScreen();
-    case 'checkout':
-      return checkoutScreen();
     case 'home':
     default:
       return homeScreen();
@@ -639,9 +545,6 @@ function bindEvents() {
         setState((st) => ({ extras: { ...st.extras, [key]: !st.extras[key] } }));
         break;
       }
-      case 'pay-select':
-        setState({ pay: Number(el.dataset.idx) });
-        break;
       default:
         break;
     }
