@@ -83,6 +83,17 @@ function prefersReducedMotion() {
   return window.matchMedia('(prefers-reduced-motion: reduce)').matches;
 }
 
+// Section entrances fire once. Keys that have already crossed 15%
+// visibility render straight into their resting state on every future
+// render — no replaying the fade when an unrelated state change (e.g.
+// switching currency) rebuilds the whole page.
+const revealedSections = new Set();
+
+function revealAttrs(key) {
+  const seen = revealedSections.has(key);
+  return `class="reveal${seen ? ' is-visible' : ''}" data-reveal="${key}"`;
+}
+
 // Shown until /api/batch resolves (or if it fails) — never render an empty
 // or collapsed stock line while the real number loads.
 const FALLBACK_REMAINING = 12;
@@ -158,7 +169,7 @@ function header() {
   <header style="position:sticky;top:0;z-index:20;background:rgba(243,241,236,.88);backdrop-filter:blur(12px);border-bottom:1px solid rgba(0,0,0,.08)">
     <div style="max-width:1240px;margin:0 auto;padding:16px 32px;display:flex;align-items:center;gap:32px">
       <div style="display:flex;align-items:center;margin-right:8px">
-        <img src="/images/logo-light.png" alt="Pitchside Displays" style="height:60px;width:auto;display:block"/>
+        <img class="fade-img" src="/images/logo-light.png" alt="Pitchside Displays" style="height:60px;width:auto;aspect-ratio:876/719;display:block"/>
       </div>
       <nav style="display:flex;gap:26px;flex:1">
         ${navHtml}
@@ -168,7 +179,7 @@ function header() {
         <div style="display:inline-flex;align-items:center;gap:7px;background:#b3261e;color:#fff;border-radius:999px;padding:7px 14px 7px 11px;font-family:'Archivo',sans-serif;font-weight:700;font-size:12px;letter-spacing:.04em;text-transform:uppercase;box-shadow:0 1px 8px rgba(179,38,30,.32)">
           <span style="width:7px;height:7px;border-radius:50%;background:#fff;animation:psd-pulse 1.4s ease-in-out infinite"></span>${esc(stockLine())}
         </div>
-        <button data-action="nav" data-screen="customize" style="background:#12120f;color:#fff;border:0;border-radius:999px;padding:11px 22px;font-size:13.5px;font-weight:500;cursor:pointer">Order now</button>
+        <button data-action="nav" data-screen="customize" class="btn-primary" style="color:#fff;border:0;border-radius:999px;padding:11px 22px;font-size:13.5px;font-weight:500;cursor:pointer">Order now</button>
       </div>
     </div>
   </header>`;
@@ -206,8 +217,8 @@ function homeScreen() {
   const hero = SHOTS[state.gi];
   const galleryHtml = SHOTS.map(
     (shot, i) => `
-    <button data-action="gallery-select" data-idx="${i}" style="flex:1;padding:0;border-radius:10px;overflow:hidden;background:#fff;cursor:pointer;aspect-ratio:3/4;border:1.5px solid ${i === state.gi ? '#12120f' : 'rgba(0,0,0,.1)'};opacity:${i === state.gi ? '1' : '.72'};transition:opacity .18s ease,border-color .18s ease">
-      <img src="${shot.src}" alt="${esc(shot.label)}" style="display:block;width:100%;height:100%;object-fit:cover"/>
+    <button data-action="gallery-select" data-idx="${i}" style="flex:1;padding:0;border-radius:10px;overflow:hidden;background:#fff;cursor:pointer;aspect-ratio:3/4;border:1.5px solid ${i === state.gi ? '#12120f' : 'rgba(0,0,0,.1)'};opacity:${i === state.gi ? '1' : '.72'};transition:opacity var(--duration-fast) var(--ease-out),border-color var(--duration-fast) var(--ease-out)">
+      <img class="fade-img" src="${shot.src}" alt="${esc(shot.label)}" style="display:block;width:100%;height:100%;object-fit:cover"/>
     </button>`
   ).join('');
 
@@ -248,7 +259,7 @@ function homeScreen() {
       <div>
         <div style="position:relative;background:#fff;border:1px solid rgba(0,0,0,.07);border-radius:18px;padding:8px;box-shadow:0 24px 50px -32px rgba(18,18,15,.4)">
           <div style="position:relative;border-radius:14px;overflow:hidden;background:#eae7e0;aspect-ratio:4/5">
-            <img src="${hero.src}" alt="Custom pitchside display case" style="display:block;width:100%;height:100%;object-fit:contain"/>
+            <img class="fade-img" src="${hero.src}" alt="Custom pitchside display case" style="display:block;width:100%;height:100%;object-fit:contain"/>
             <div style="position:absolute;inset:0;pointer-events:none;box-shadow:inset 0 0 90px rgba(18,18,15,.16)"></div>
             <div style="position:absolute;left:14px;bottom:14px;display:flex;align-items:center;gap:10px">
               <span style="background:rgba(18,18,15,.82);color:#fff;backdrop-filter:blur(6px);border-radius:999px;padding:6px 12px;font-family:'Archivo',sans-serif;font-weight:700;font-size:10.5px;letter-spacing:.14em">${state.gi + 1} / ${SHOTS.length}</span>
@@ -276,9 +287,9 @@ function homeScreen() {
 
         <div style="display:flex;gap:12px;margin-top:26px">
           <button
-            data-action="nav" data-screen="customize"
+            data-action="nav" data-screen="customize" class="btn-primary"
             ${soldOut() ? 'disabled' : ''}
-            style="flex:1;background:#12120f;color:#fff;border:0;border-radius:12px;padding:19px 26px;font-size:15.5px;font-weight:500;cursor:${soldOut() ? 'not-allowed' : 'pointer'};display:flex;align-items:center;justify-content:center;gap:10px;opacity:${soldOut() ? '.5' : '1'}"
+            style="flex:1;color:#fff;border:0;border-radius:12px;padding:19px 26px;font-size:15.5px;font-weight:500;cursor:${soldOut() ? 'not-allowed' : 'pointer'};display:flex;align-items:center;justify-content:center;gap:10px;opacity:${soldOut() ? '.5' : '1'}"
           >${soldOut() ? 'Sold out' : 'Start your custom order'} ${soldOut() ? '' : '<span style="font-size:17px">→</span>'}</button>
           <a href="https://instagram.com/pitchsidedisplays" target="_blank" rel="noopener" style="border:1px solid rgba(0,0,0,.14);border-radius:12px;padding:19px 22px;font-size:15px;color:#12120f;display:flex;align-items:center">See it on IG</a>
         </div>
@@ -292,14 +303,14 @@ function homeScreen() {
       </div>
     </section>
 
-    <section style="border-top:1px solid rgba(0,0,0,.08);background:#fff">
+    <section ${revealAttrs('home-steps')} style="border-top:1px solid rgba(0,0,0,.08);background:#fff">
       <div style="max-width:1240px;margin:0 auto;padding:64px 32px">
         <h2 style="font-family:'Archivo',sans-serif;font-weight:700;font-size:13px;letter-spacing:.16em;text-transform:uppercase;color:rgba(0,0,0,.45);margin:0 0 34px">How it works</h2>
         <div style="display:grid;grid-template-columns:repeat(4,1fr);gap:36px">${stepsHtml}</div>
       </div>
     </section>
 
-    <section style="background:#f3f1ec">
+    <section ${revealAttrs('home-video')} style="background:#f3f1ec">
       <div class="video-demo-grid" style="max-width:1240px;margin:0 auto;padding:64px 32px">
         <div style="position:relative;width:100%;aspect-ratio:1280/2276;mask-image:linear-gradient(to right, transparent 0%, #000 10%, #000 90%, transparent 100%);-webkit-mask-image:linear-gradient(to right, transparent 0%, #000 10%, #000 90%, transparent 100%)">
           <video
@@ -336,15 +347,15 @@ function homeScreen() {
             </div>
           </div>
           <button
-            data-action="nav" data-screen="customize"
+            data-action="nav" data-screen="customize" class="btn-primary"
             ${soldOut() ? 'disabled' : ''}
-            style="margin-top:28px;background:#12120f;color:#fff;border:0;border-radius:12px;padding:16px 24px;font-size:14.5px;font-weight:500;cursor:${soldOut() ? 'not-allowed' : 'pointer'};opacity:${soldOut() ? '.5' : '1'}"
+            style="margin-top:28px;color:#fff;border:0;border-radius:12px;padding:16px 24px;font-size:14.5px;font-weight:500;cursor:${soldOut() ? 'not-allowed' : 'pointer'};opacity:${soldOut() ? '.5' : '1'}"
           >${soldOut() ? 'Sold out' : 'Start your custom order'}</button>
         </div>
       </div>
     </section>
 
-    <section style="border-top:1px solid rgba(0,0,0,.08)">
+    <section ${revealAttrs('home-faq')} style="border-top:1px solid rgba(0,0,0,.08)">
       <div style="max-width:1240px;margin:0 auto;padding:56px 32px 72px;display:grid;grid-template-columns:.8fr 1.2fr;gap:56px">
         <h2 style="font-family:'Archivo',sans-serif;font-weight:800;font-size:34px;line-height:1.05;letter-spacing:-.03em;margin:0">Questions,<br/>answered</h2>
         <div style="border-top:1px solid rgba(0,0,0,.1)">${faqsHtml}</div>
@@ -444,7 +455,7 @@ function customizeScreen() {
             <span style="font-family:'Archivo',sans-serif;font-weight:700;font-size:18px">Total</span>
             <span style="font-family:'Archivo',sans-serif;font-weight:800;font-size:24px;letter-spacing:-.02em">${money(price)} <span style="font-size:13px;font-weight:500;color:rgba(0,0,0,.45)">+ shipping</span></span>
           </div>
-          <button data-action="nav" data-screen="checkout" style="width:100%;margin-top:18px;background:#12120f;color:#fff;border:0;border-radius:12px;padding:18px;font-size:15.5px;font-weight:500;cursor:pointer">Continue to checkout</button>
+          <button data-action="nav" data-screen="checkout" class="btn-primary" style="width:100%;margin-top:18px;color:#fff;border:0;border-radius:12px;padding:18px;font-size:15.5px;font-weight:500;cursor:pointer">Continue to checkout</button>
         </div>
       </div>
     </div>
@@ -509,7 +520,7 @@ function checkoutScreen() {
       <div style="background:#fff;border:1px solid rgba(0,0,0,.08);border-radius:16px;padding:24px;position:sticky;top:88px">
         <div style="font-family:'Archivo',sans-serif;font-weight:700;font-size:12px;letter-spacing:.14em;text-transform:uppercase;color:rgba(0,0,0,.45);margin-bottom:16px">Order summary</div>
         <div style="display:flex;gap:14px;padding-bottom:16px;border-bottom:1px solid rgba(0,0,0,.08)">
-          <div style="width:64px;height:86px;border-radius:8px;overflow:hidden;background:#efece6;flex:none"><img src="${SHOTS[state.gi].src}" alt="" style="width:100%;height:100%;object-fit:cover"/></div>
+          <div style="width:64px;height:86px;border-radius:8px;overflow:hidden;background:#efece6;flex:none"><img class="fade-img" src="${SHOTS[state.gi].src}" alt="" style="width:100%;height:100%;object-fit:cover"/></div>
           <div>
             <div style="font-size:14.5px;font-weight:500">Custom display case</div>
             <div style="font-size:12.5px;color:rgba(0,0,0,.5);margin-top:4px;line-height:1.5">${esc(configLine())}</div>
@@ -520,7 +531,7 @@ function checkoutScreen() {
           <span style="font-family:'Archivo',sans-serif;font-weight:700;font-size:17px">Total</span>
           <span style="font-family:'Archivo',sans-serif;font-weight:800;font-size:24px;letter-spacing:-.02em">${totalLabel}</span>
         </div>
-        <button style="width:100%;margin-top:18px;background:#12120f;color:#fff;border:0;border-radius:12px;padding:18px;font-size:15.5px;font-weight:500;cursor:pointer">Pay ${totalLabel}</button>
+        <button class="btn-primary" style="width:100%;margin-top:18px;color:#fff;border:0;border-radius:12px;padding:18px;font-size:15.5px;font-weight:500;cursor:pointer">Pay ${totalLabel}</button>
         <div style="margin-top:14px;font-size:12.5px;color:rgba(0,0,0,.5);line-height:1.6">Ships from the USA, 22 × 30 in and ~12 lb boxed · US delivery 3–5 days after build · tracked</div>
       </div>
     </div>
@@ -567,6 +578,34 @@ function setupVideoObserver() {
   videoObserver.observe(video);
 }
 
+let revealObserver = null;
+
+function setupRevealObserver() {
+  revealObserver?.disconnect();
+  revealObserver = null;
+
+  // CSS already forces .reveal to its resting state under reduced motion
+  // regardless of whether it ever gets observed — this just skips the
+  // pointless observing/unobserving work on top of that.
+  if (prefersReducedMotion()) return;
+
+  const targets = document.querySelectorAll('.reveal:not(.is-visible)');
+  if (!targets.length) return;
+
+  revealObserver = new IntersectionObserver(
+    (entries) => {
+      for (const entry of entries) {
+        if (entry.intersectionRatio < 0.15) continue;
+        entry.target.classList.add('is-visible');
+        revealedSections.add(entry.target.dataset.reveal);
+        revealObserver.unobserve(entry.target);
+      }
+    },
+    { threshold: 0.15 }
+  );
+  targets.forEach((el) => revealObserver.observe(el));
+}
+
 function render() {
   const app = document.getElementById('app');
   app.innerHTML = `
@@ -577,6 +616,7 @@ function render() {
       ${footer()}
     </div>`;
   setupVideoObserver();
+  setupRevealObserver();
 }
 
 function bindEvents() {
@@ -641,10 +681,29 @@ function bindEvents() {
   });
 }
 
+function setupImageFadeIn() {
+  // 'load'/'error' don't bubble, so this listens on the capture phase on a
+  // permanent ancestor instead — one listener, works for every .fade-img
+  // ever rendered (including ones recreated by a later re-render), no
+  // re-attaching per image.
+  const reveal = (e) => {
+    const img = e.target;
+    if (img.tagName === 'IMG' && img.classList.contains('fade-img')) {
+      img.classList.add('is-loaded');
+    }
+  };
+  document.addEventListener('load', reveal, true);
+  document.addEventListener('error', reveal, true);
+}
+
 function init() {
   bindEvents();
   render();
-  window.addEventListener('beforeunload', () => videoObserver?.disconnect());
+  setupImageFadeIn();
+  window.addEventListener('beforeunload', () => {
+    videoObserver?.disconnect();
+    revealObserver?.disconnect();
+  });
   fetchBatchRemaining();
   // Catches the case where the tab was already open (so the on-load fetch
   // ran before an admin's update) and is switched back to later.

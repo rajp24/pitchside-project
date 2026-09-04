@@ -4,6 +4,16 @@
   box-sizing: border-box;
 }
 
+/* -- motion system --------------------------------------------------------
+   Two easings, two durations, defined once. Every transition on the site
+   draws from these — no ad-hoc timings anywhere else in the codebase. */
+:root {
+  --ease-out: cubic-bezier(0.16, 1, 0.3, 1);
+  --ease-in-out: cubic-bezier(0.65, 0, 0.35, 1);
+  --duration-fast: 150ms; /* hover, focus */
+  --duration-slow: 400ms; /* entrances, reveals */
+}
+
 html,
 body {
   margin: 0;
@@ -26,9 +36,14 @@ svg {
 a {
   color: #1f6b4f;
   text-decoration: none;
+  cursor: pointer;
+  transition:
+    color var(--duration-fast) var(--ease-out),
+    opacity var(--duration-fast) var(--ease-out);
 }
 a:hover {
   color: #12120f;
+  opacity: 0.72;
 }
 
 input,
@@ -81,6 +96,87 @@ button {
   }
 }
 
+/* Nav-style text buttons/links (header nav, admin "Go back home", etc). */
+.nav-link {
+  cursor: pointer;
+  transition: opacity var(--duration-fast) var(--ease-out);
+}
+.nav-link:hover {
+  opacity: 0.65;
+}
+
+/* Primary (solid black) action buttons — the site's main CTAs. Hover lifts
+   1px and deepens the fill to the accent green; the press back to 0 is a
+   snappier 75ms so it reads as physical. Background-color and transform
+   are both non-layout-triggering (paint/composite only), so this stays
+   smooth even on a slow phone despite not being a pure transform/opacity
+   pair. Never scaled — scaling a button blurs its text mid-tween. */
+.btn-primary,
+.btn-decrement {
+  transition:
+    transform var(--duration-fast) var(--ease-out),
+    background-color var(--duration-fast) var(--ease-out);
+}
+.btn-primary {
+  background: #12120f;
+}
+.btn-primary:hover:not(:disabled) {
+  background: #1f6b4f;
+}
+.btn-decrement {
+  background: #b3261e;
+}
+.btn-decrement:hover:not(:disabled) {
+  background: #8f1e18;
+}
+.btn-primary:hover:not(:disabled),
+.btn-decrement:hover:not(:disabled) {
+  transform: translateY(-1px);
+}
+.btn-primary:active:not(:disabled),
+.btn-decrement:active:not(:disabled) {
+  transform: translateY(0);
+  transition: transform 75ms var(--ease-out);
+}
+.btn-primary:disabled,
+.btn-decrement:disabled {
+  transform: none;
+}
+/* The Orders link on /admin is an <a> styled as a button — cancel the base
+   link's opacity-dim hover so it doesn't fight with the button's own
+   background/lift hover. */
+.btn-primary:hover,
+.btn-decrement:hover {
+  opacity: 1;
+}
+
+/* Section entrances — one IntersectionObserver drives this one class
+   (see setupRevealObserver in main.js). Fires once at 15% visibility,
+   then unobserves; re-renders of an already-revealed section render
+   straight into .is-visible with no replay. Small movement on purpose:
+   16px reads as refined, more reads as a template. */
+.reveal {
+  opacity: 0;
+  transform: translateY(16px);
+  transition:
+    opacity var(--duration-slow) var(--ease-out),
+    transform var(--duration-slow) var(--ease-out);
+}
+.reveal.is-visible {
+  opacity: 1;
+  transform: translateY(0);
+}
+
+/* Images fade in on load instead of popping in. Space is reserved via
+   aspect-ratio (set per image/container) so nothing shifts either way. */
+.fade-img {
+  opacity: 0;
+  transition: opacity var(--duration-slow) var(--ease-out);
+}
+.fade-img.is-loaded {
+  opacity: 1;
+}
+
 @media (prefers-reduced-motion: reduce) {
   *,
   *::before,
@@ -89,5 +185,15 @@ button {
     animation-iteration-count: 1 !important;
     transition-duration: 0.01ms !important;
     scroll-behavior: auto !important;
+  }
+
+  /* The instant-transition rule above isn't enough on its own — a .reveal
+     section a reduced-motion user hasn't scrolled to yet would still sit
+     at opacity 0 until it does. Everything just appears at rest. */
+  .reveal,
+  .fade-img {
+    opacity: 1;
+    transform: none;
+    transition: none;
   }
 }

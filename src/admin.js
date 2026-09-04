@@ -85,9 +85,9 @@ function loginView() {
             : ''
         }
         <button
-          type="submit"
+          type="submit" class="btn-primary"
           ${state.loggingIn ? 'disabled' : ''}
-          style="background:#12120f;color:#fff;border:0;border-radius:11px;padding:16px;font-size:15px;font-weight:500;cursor:pointer;margin-top:4px;opacity:${state.loggingIn ? '.6' : '1'}"
+          style="color:#fff;border:0;border-radius:11px;padding:16px;font-size:15px;font-weight:500;cursor:pointer;margin-top:4px;opacity:${state.loggingIn ? '.6' : '1'}"
         >${state.loggingIn ? 'Signing in…' : 'Sign in'}</button>
       </form>
       <div style="text-align:center;margin-top:18px">
@@ -120,9 +120,9 @@ function panelsView() {
           <div style="font-family:'Archivo',sans-serif;font-weight:700;font-size:12px;letter-spacing:.14em;text-transform:uppercase;color:rgba(0,0,0,.45)">Batch</div>
           <div style="font-family:'Archivo',sans-serif;font-weight:800;font-size:72px;letter-spacing:-.03em;line-height:1;text-align:center;margin:28px 0">${remainingDisplay}</div>
           <button
-            id="decrement-btn"
+            id="decrement-btn" class="btn-decrement"
             ${state.saving || atZero || state.remaining === null ? 'disabled' : ''}
-            style="width:100%;background:#b3261e;color:#fff;border:0;border-radius:12px;padding:22px;font-size:19px;font-weight:700;cursor:pointer;opacity:${state.saving || atZero || state.remaining === null ? '.5' : '1'}"
+            style="width:100%;color:#fff;border:0;border-radius:12px;padding:22px;font-size:19px;font-weight:700;cursor:pointer;opacity:${state.saving || atZero || state.remaining === null ? '.5' : '1'}"
           >−1</button>
 
           <div style="display:flex;gap:10px;margin-top:20px">
@@ -136,9 +136,9 @@ function panelsView() {
               style="flex:1;min-width:0;box-sizing:border-box;padding:11px 12px;border:1px solid rgba(0,0,0,.14);border-radius:10px;font-size:14.5px"
             />
             <button
-              id="save-btn"
+              id="save-btn" class="btn-primary"
               ${state.saving ? 'disabled' : ''}
-              style="background:#12120f;color:#fff;border:0;border-radius:10px;padding:11px 18px;font-size:13.5px;font-weight:500;cursor:pointer;opacity:${state.saving ? '.6' : '1'}"
+              style="color:#fff;border:0;border-radius:10px;padding:11px 18px;font-size:13.5px;font-weight:500;cursor:pointer;opacity:${state.saving ? '.6' : '1'}"
             >Save</button>
           </div>
           ${statusHtml}
@@ -149,7 +149,8 @@ function panelsView() {
             href="https://dashboard.stripe.com/payments"
             target="_blank"
             rel="noopener noreferrer"
-            style="display:block;width:100%;text-align:center;background:#12120f;color:#fff;border-radius:12px;padding:22px;font-family:'Archivo',sans-serif;font-weight:700;font-size:15px;text-transform:uppercase;letter-spacing:.06em"
+            class="btn-primary"
+            style="display:block;width:100%;text-align:center;color:#fff;border-radius:12px;padding:22px;font-family:'Archivo',sans-serif;font-weight:700;font-size:15px;text-transform:uppercase;letter-spacing:.06em"
           >Orders</a>
         </div>
       </div>
