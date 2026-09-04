@@ -155,16 +155,16 @@ function header() {
     .join('');
   return `
   <header style="position:sticky;top:0;z-index:20;background:rgba(243,241,236,.88);backdrop-filter:blur(12px);border-bottom:1px solid rgba(0,0,0,.08)">
-    <div style="max-width:1240px;margin:0 auto;padding:16px 32px;display:flex;align-items:center;gap:32px">
+    <div class="site-header-inner" style="max-width:1240px;margin:0 auto;padding:16px 32px">
       <div style="display:flex;align-items:center;margin-right:8px">
         <img class="fade-img" src="/images/logo-light.png" alt="Pitchside Displays" style="height:60px;width:auto;aspect-ratio:876/719;display:block"/>
       </div>
-      <nav style="display:flex;gap:26px;flex:1">
+      <nav class="site-nav">
         ${navHtml}
         <a href="/admin" class="nav-link" style="padding:6px 0;font-size:14px;color:rgba(0,0,0,.45)">Admin</a>
       </nav>
-      <div style="display:flex;align-items:center;gap:14px">
-        <div style="display:inline-flex;align-items:center;gap:7px;background:#b3261e;color:#fff;border-radius:999px;padding:7px 14px 7px 11px;font-family:'Archivo',sans-serif;font-weight:700;font-size:12px;letter-spacing:.04em;text-transform:uppercase;box-shadow:0 1px 8px rgba(179,38,30,.32)">
+      <div class="site-header-actions">
+        <div class="site-stock-pill" style="align-items:center;gap:7px;background:#b3261e;color:#fff;border-radius:999px;padding:7px 14px 7px 11px;font-family:'Archivo',sans-serif;font-weight:700;font-size:12px;letter-spacing:.04em;text-transform:uppercase;box-shadow:0 1px 8px rgba(179,38,30,.32)">
           <span style="width:7px;height:7px;border-radius:50%;background:#fff;animation:psd-pulse 1.4s ease-in-out infinite"></span>${esc(stockLine())}
         </div>
         <button data-action="nav" data-screen="customize" class="btn-primary" style="color:#fff;border:0;border-radius:999px;padding:11px 22px;font-size:13.5px;font-weight:500;cursor:pointer">Order now</button>
@@ -176,7 +176,7 @@ function header() {
 function footer() {
   return `
   <footer style="background:#12120f;color:#fff;margin-top:auto">
-    <div style="max-width:1240px;margin:0 auto;padding:52px 32px 40px;display:grid;grid-template-columns:1.2fr 1fr 1fr 1fr;gap:36px">
+    <div class="footer-grid" style="max-width:1240px;margin:0 auto;padding:52px 32px 40px">
       <div>
         <div style="font-family:'Archivo',sans-serif;font-weight:800;font-size:17px;letter-spacing:-.02em;text-transform:uppercase">Pitchside Displays</div>
         <p style="font-size:14px;line-height:1.6;color:rgba(255,255,255,.5);margin:12px 0 0;max-width:32ch">Made-to-order display cases for graded football cards. Built one at a time.</p>
@@ -205,7 +205,7 @@ function homeScreen() {
   const hero = SHOTS[state.gi];
   const galleryHtml = SHOTS.map(
     (shot, i) => `
-    <button data-action="gallery-select" data-idx="${i}" style="flex:1;padding:0;border-radius:10px;overflow:hidden;background:#fff;cursor:pointer;aspect-ratio:3/4;border:1.5px solid ${i === state.gi ? '#12120f' : 'rgba(0,0,0,.1)'};opacity:${i === state.gi ? '1' : '.72'};transition:opacity var(--duration-fast) var(--ease-out),border-color var(--duration-fast) var(--ease-out)">
+    <button data-action="gallery-select" data-idx="${i}" class="gallery-thumb" style="padding:0;border-radius:10px;overflow:hidden;background:#fff;cursor:pointer;aspect-ratio:3/4;border:1.5px solid ${i === state.gi ? '#12120f' : 'rgba(0,0,0,.1)'};opacity:${i === state.gi ? '1' : '.72'};transition:opacity var(--duration-fast) var(--ease-out),border-color var(--duration-fast) var(--ease-out)">
       <img class="fade-img" src="${shot.src}" alt="${esc(shot.label)}" style="display:block;width:100%;height:100%;object-fit:cover"/>
     </button>`
   ).join('');
@@ -235,7 +235,7 @@ function homeScreen() {
 
   const faqsHtml = FAQS.map(
     (faq) => `
-    <div style="border-bottom:1px solid rgba(0,0,0,.1);padding:20px 0;display:grid;grid-template-columns:1fr 1.3fr;gap:28px">
+    <div class="faq-row-grid" style="border-bottom:1px solid rgba(0,0,0,.1);padding:20px 0">
       <div style="font-size:15.5px;font-weight:500">${esc(faq.q)}</div>
       <div style="font-size:15px;line-height:1.55;color:rgba(0,0,0,.6)">${esc(faq.a)}</div>
     </div>`
@@ -243,7 +243,7 @@ function homeScreen() {
 
   return `
   <main style="flex:1">
-    <section style="max-width:1240px;margin:0 auto;padding:56px 32px 40px;display:grid;grid-template-columns:1.05fr .95fr;gap:56px;align-items:start">
+    <section class="hero-grid" style="max-width:1240px;margin:0 auto;padding:56px 32px 40px">
       <div>
         <div style="position:relative;background:#fff;border:1px solid rgba(0,0,0,.07);border-radius:18px;padding:8px;box-shadow:0 24px 50px -32px rgba(18,18,15,.4)">
           <div style="position:relative;border-radius:14px;overflow:hidden;background:#eae7e0;aspect-ratio:4/5">
@@ -255,7 +255,7 @@ function homeScreen() {
             </div>
           </div>
         </div>
-        <div style="display:flex;gap:12px;margin-top:14px">${galleryHtml}</div>
+        <div class="gallery-strip" style="display:flex;gap:12px;margin-top:14px">${galleryHtml}</div>
       </div>
 
       <div style="padding-top:6px">
@@ -271,9 +271,9 @@ function homeScreen() {
         </div>
         <div style="display:flex;gap:6px;margin-top:14px;background:#e9e6df;border-radius:999px;padding:4px;width:fit-content">${currencyHtml}</div>
 
-        <div style="display:grid;grid-template-columns:1fr 1fr;gap:1px;background:rgba(0,0,0,.08);border:1px solid rgba(0,0,0,.08);border-radius:14px;overflow:hidden;margin:28px 0 0">${specsHtml}</div>
+        <div class="specs-grid" style="gap:1px;background:rgba(0,0,0,.08);border:1px solid rgba(0,0,0,.08);border-radius:14px;overflow:hidden;margin:28px 0 0">${specsHtml}</div>
 
-        <div style="display:flex;gap:12px;margin-top:26px">
+        <div class="cta-row" style="margin-top:26px">
           ${
             soldOut()
               ? `<span class="btn-primary" aria-disabled="true" style="flex:1;color:#fff;border:0;border-radius:12px;padding:19px 26px;font-size:15.5px;font-weight:500;cursor:not-allowed;display:flex;align-items:center;justify-content:center;gap:10px;opacity:.5">Sold out</span>`
@@ -286,7 +286,7 @@ function homeScreen() {
           <div style="font-family:'Archivo',sans-serif;font-weight:800;font-size:15px;letter-spacing:-.01em;color:#b3261e">${esc(stockLine())}</div>
           <div style="margin-top:8px;font-size:12.5px;color:rgba(0,0,0,.55);line-height:1.5">${soldOut() ? 'This batch has sold out. Once all current orders are completed, the next batch will open for new orders.' : 'Each batch is built by hand. Once all current orders are completed, the next batch will open for new orders.'}</div>
         </div>
-        <div style="margin-top:14px;display:flex;gap:14px;font-size:13px;color:rgba(0,0,0,.5)">
+        <div style="margin-top:14px;display:flex;flex-wrap:wrap;row-gap:4px;gap:14px;font-size:13px;color:rgba(0,0,0,.5)">
           <span>10-14 day build</span><span>·</span><span>Ships from the USA</span><span>·</span><span>Tracked UPS delivery</span>
         </div>
       </div>
@@ -295,7 +295,7 @@ function homeScreen() {
     <section ${revealAttrs('home-steps')} style="border-top:1px solid rgba(0,0,0,.08);background:#fff">
       <div style="max-width:1240px;margin:0 auto;padding:64px 32px">
         <h2 style="font-family:'Archivo',sans-serif;font-weight:700;font-size:13px;letter-spacing:.16em;text-transform:uppercase;color:rgba(0,0,0,.45);margin:0 0 34px">How it works</h2>
-        <div style="display:grid;grid-template-columns:repeat(3,1fr);gap:36px">${stepsHtml}</div>
+        <div class="steps-grid">${stepsHtml}</div>
       </div>
     </section>
 
@@ -349,7 +349,7 @@ function homeScreen() {
     </section>
 
     <section ${revealAttrs('home-faq')} style="border-top:1px solid rgba(0,0,0,.08)">
-      <div style="max-width:1240px;margin:0 auto;padding:56px 32px 72px;display:grid;grid-template-columns:.8fr 1.2fr;gap:56px">
+      <div class="faq-outer-grid" style="max-width:1240px;margin:0 auto;padding:56px 32px 72px">
         <h2 style="font-family:'Archivo',sans-serif;font-weight:800;font-size:34px;line-height:1.05;letter-spacing:-.03em;margin:0">Questions,<br/>answered</h2>
         <div style="border-top:1px solid rgba(0,0,0,.1)">${faqsHtml}</div>
       </div>
@@ -385,13 +385,13 @@ function customizeScreen() {
 
   return `
   <main style="flex:1;max-width:1240px;margin:0 auto;padding:40px 32px 72px;width:100%;box-sizing:border-box">
-    <div style="display:flex;align-items:baseline;justify-content:space-between;margin-bottom:26px">
+    <div style="display:flex;flex-wrap:wrap;gap:8px 20px;align-items:baseline;justify-content:space-between;margin-bottom:26px">
       <h1 style="font-family:'Archivo',sans-serif;font-weight:800;font-size:34px;letter-spacing:-.03em;margin:0">Build your display</h1>
       <div style="font-size:13.5px;color:rgba(0,0,0,.5)">Step 1 of 2 · ${esc(stockLine())}</div>
     </div>
 
-    <div style="display:grid;grid-template-columns:1fr 1fr;gap:28px;align-items:start">
-      <div style="background:#12120f;border-radius:18px;padding:26px;position:sticky;top:88px">
+    <div class="customize-grid">
+      <div class="sticky-panel" style="background:#12120f;border-radius:18px;padding:26px">
         <div style="text-align:center;color:#fff;margin-bottom:18px">
           <div style="font-family:'Archivo',sans-serif;font-weight:800;font-size:17px;letter-spacing:.06em;text-transform:uppercase">${esc(state.team)}</div>
         </div>
@@ -411,7 +411,7 @@ function customizeScreen() {
       </div>
 
       <div style="display:flex;flex-direction:column;gap:20px">
-        <div style="background:#fff;border:1px solid rgba(0,0,0,.08);border-radius:16px;padding:24px;display:grid;grid-template-columns:1fr 1fr;gap:18px">
+        <div class="customize-form-grid" style="background:#fff;border:1px solid rgba(0,0,0,.08);border-radius:16px;padding:24px">
           <div style="grid-column:1/-1;font-size:12.5px;color:rgba(0,0,0,.5)">Every case is built to order — your club, your stadium, your details. For example:</div>
           <div>
             <label style="display:block;font-size:12.5px;font-weight:500;margin-bottom:7px">Club</label>
@@ -490,11 +490,11 @@ function checkoutScreen() {
   return `
   <main style="flex:1;max-width:1040px;margin:0 auto;padding:40px 32px 72px;width:100%;box-sizing:border-box">
     <h1 style="font-family:'Archivo',sans-serif;font-weight:800;font-size:34px;letter-spacing:-.03em;margin:0 0 26px">Checkout</h1>
-    <div style="display:grid;grid-template-columns:1.15fr .85fr;gap:28px;align-items:start">
+    <div class="checkout-grid">
       <div style="display:flex;flex-direction:column;gap:20px">
         <div style="background:#fff;border:1px solid rgba(0,0,0,.08);border-radius:16px;padding:24px">
           <div style="font-family:'Archivo',sans-serif;font-weight:700;font-size:12px;letter-spacing:.14em;text-transform:uppercase;color:rgba(0,0,0,.45);margin-bottom:18px">Contact &amp; delivery</div>
-          <div style="display:grid;grid-template-columns:1fr 1fr;gap:16px">${fieldsHtml}</div>
+          <div class="checkout-fields-grid">${fieldsHtml}</div>
         </div>
 
         <div style="background:#fff;border:1px solid rgba(0,0,0,.08);border-radius:16px;padding:24px">
@@ -504,7 +504,7 @@ function checkoutScreen() {
         </div>
       </div>
 
-      <div style="background:#fff;border:1px solid rgba(0,0,0,.08);border-radius:16px;padding:24px;position:sticky;top:88px">
+      <div class="sticky-panel" style="background:#fff;border:1px solid rgba(0,0,0,.08);border-radius:16px;padding:24px">
         <div style="font-family:'Archivo',sans-serif;font-weight:700;font-size:12px;letter-spacing:.14em;text-transform:uppercase;color:rgba(0,0,0,.45);margin-bottom:16px">Order summary</div>
         <div style="display:flex;gap:14px;padding-bottom:16px;border-bottom:1px solid rgba(0,0,0,.08)">
           <div style="width:64px;height:86px;border-radius:8px;overflow:hidden;background:#efece6;flex:none"><img class="fade-img" src="${SHOTS[state.gi].src}" alt="" style="width:100%;height:100%;object-fit:cover"/></div>

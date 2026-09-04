@@ -75,6 +75,32 @@ button {
   }
 }
 
+/* -- responsive layout ----------------------------------------------------
+   Every multi-column layout on the site lives in a class (not inline
+   grid-template-columns) specifically so it can be collapsed here — an
+   inline style can't be overridden by a media query, only another inline
+   style. One breakpoint, used everywhere: 780px. */
+
+/* Grid items default to min-width:auto, which refuses to shrink below the
+   item's own content size — a wide child (the horizontally-scrolling
+   gallery strip, a long line of text) then pushes its whole grid track,
+   and the page, wider instead of wrapping or scrolling in place. This is
+   what actually lets grid-template-columns:1fr do its job. */
+.hero-grid > *,
+.specs-grid > *,
+.steps-grid > *,
+.faq-outer-grid > *,
+.faq-row-grid > *,
+.footer-grid > *,
+.customize-grid > *,
+.customize-form-grid > *,
+.checkout-grid > *,
+.checkout-fields-grid > *,
+.video-demo-grid > *,
+.admin-grid > * {
+  min-width: 0;
+}
+
 .video-demo-grid {
   display: grid;
   grid-template-columns: 1.1fr 0.9fr;
@@ -89,10 +115,152 @@ button {
   align-items: start;
 }
 
+.hero-grid {
+  display: grid;
+  grid-template-columns: 1.05fr 0.95fr;
+  gap: 56px;
+  align-items: start;
+}
+
+.specs-grid {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+}
+
+.steps-grid {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 36px;
+}
+
+.faq-outer-grid {
+  display: grid;
+  grid-template-columns: 0.8fr 1.2fr;
+  gap: 56px;
+}
+
+.faq-row-grid {
+  display: grid;
+  grid-template-columns: 1fr 1.3fr;
+  gap: 28px;
+}
+
+.footer-grid {
+  display: grid;
+  grid-template-columns: 1.2fr 1fr 1fr 1fr;
+  gap: 36px;
+}
+
+.customize-grid {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 28px;
+  align-items: start;
+}
+
+.sticky-panel {
+  position: sticky;
+  top: 88px;
+}
+
+.customize-form-grid {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 18px;
+}
+
+.checkout-grid {
+  display: grid;
+  grid-template-columns: 1.15fr 0.85fr;
+  gap: 28px;
+  align-items: start;
+}
+
+.checkout-fields-grid {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 16px;
+}
+
+/* Header: logo + order button stay on one row (the conversion-critical
+   pair); nav drops to its own row underneath instead of squeezing in. */
+.site-header-inner {
+  display: flex;
+  align-items: center;
+  gap: 32px;
+}
+.site-nav {
+  display: flex;
+  gap: 26px;
+  flex: 1;
+}
+.site-header-actions {
+  display: flex;
+  align-items: center;
+  gap: 14px;
+}
+.site-stock-pill {
+  display: inline-flex;
+}
+
+/* Button rows that pair a flexible primary CTA with a fixed-width
+   secondary link — wraps instead of squeezing either one unreadably
+   narrow. */
+.cta-row {
+  display: flex;
+  gap: 12px;
+}
+
+.gallery-thumb {
+  flex: 1;
+}
+
 @media (max-width: 780px) {
   .video-demo-grid,
-  .admin-grid {
+  .admin-grid,
+  .hero-grid,
+  .specs-grid,
+  .steps-grid,
+  .faq-outer-grid,
+  .faq-row-grid,
+  .footer-grid,
+  .customize-grid,
+  .customize-form-grid,
+  .checkout-grid,
+  .checkout-fields-grid {
     grid-template-columns: 1fr;
+  }
+
+  .sticky-panel {
+    position: static;
+  }
+
+  .site-header-inner {
+    flex-wrap: wrap;
+    row-gap: 10px;
+  }
+  .site-header-inner img {
+    height: 44px;
+  }
+  .site-nav {
+    order: 3;
+    flex-basis: 100%;
+    flex-wrap: wrap;
+  }
+  .site-header-actions .site-stock-pill {
+    display: none;
+  }
+
+  .cta-row {
+    flex-wrap: wrap;
+  }
+
+  .gallery-strip {
+    overflow-x: auto;
+    -webkit-overflow-scrolling: touch;
+  }
+  .gallery-thumb {
+    flex: 0 0 72px;
   }
 }
 
