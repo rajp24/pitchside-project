@@ -80,7 +80,7 @@ let state = {
   stadium: 'Anfield',
   formation: '4-3-3',
   extras: { Tifos: true, Flags: true, 'Player names': false },
-  notes: 'Front three: Salah, Núñez, Díaz — home kit, 2023/24 season.',
+  notes: 'Champions League format/banners, night game, Liverpool flags.',
   filled: [0, 1, 2, 4, 6, 10],
   remaining: FALLBACK_REMAINING,
 };
