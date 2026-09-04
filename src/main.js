@@ -23,23 +23,22 @@ const STADIUM_OPTIONS = [
 ];
 
 const SPECS = [
-  { k: 'Outer size', v: '22 in × 30 in' }, { k: 'Slab slots', v: '11' },
-  { k: 'Default layout', v: '4-3-3 formation' }, { k: 'Fits', v: 'PSA / ACE / same-size slabs' },
+  { k: 'Outer size', v: '22 in × 32 in' }, { k: 'Slab slots', v: '11' },
+  { k: 'Fits', v: 'PSA / ACE / same-size slabs' },
   { k: 'Front', v: 'UV-protected acrylic, hinged' }, { k: 'Boxed weight', v: '~12 lb' },
 ];
 
 const STEPS = [
   { n: '01', t: 'Pick your club', d: 'Any club, any era. We source the stadium print to match.' },
-  { n: '02', t: 'Set the formation', d: '4-3-3 as standard, or tell us how you want the eleven arranged.' },
-  { n: '03', t: 'Add the details', d: 'Tifos, flags, player names under each slot, a season on the header.' },
-  { n: '04', t: 'We build and ship', d: 'Approval mockup first, then a 4–6 week build and tracked delivery.' },
+  { n: '02', t: 'Add the details', d: "Personalized customization requests, including tifos, flags, player names, banners, or any other specific details you'd like featured in the stands." },
+  { n: '03', t: 'We build and ship', d: 'Approval mockup first, then a 10-14 business day build and tracked delivery.' },
 ];
 
 const FAQS = [
   { q: 'What slabs fit?', a: 'PSA and ACE cases, plus anything the same footprint. Slots hold them without tape or glue.' },
   { q: 'Can I change the cards later?', a: 'Yes. The front is hinged, so you swap slabs without dismantling anything.' },
   { q: 'Which clubs can you do?', a: 'Any club we can get a clean stadium image for. Ask us about national teams too.' },
-  { q: 'How long does it take?', a: 'Roughly four to six weeks from approval, depending on the batch.' },
+  { q: 'How long does it take?', a: 'Roughly 10-14 business days from approval, depending on the batch.' },
   { q: 'Where do you ship?', a: 'Everything ships from the USA, worldwide on request. Tracked with UPS.' },
 ];
 
@@ -59,7 +58,7 @@ const PAY_METHODS = [
 
 const SHOT_LABELS = [
   'Hinged front, eleven slots ready',
-  'Mounted on a mantel, 4-3-3',
+  'Mounted on a mantel',
   'Door open for swapping slabs',
   'Front three only',
   'Closed, empty stadium print',
@@ -144,7 +143,7 @@ async function fetchBatchRemaining() {
 
 function configLine() {
   const active = Object.keys(state.extras).filter((k) => state.extras[k]);
-  return `${state.team} · ${state.stadium} · ${state.formation}${active.length ? ' · ' + active.join(', ') : ''}`;
+  return `${state.team} · ${state.stadium}${active.length ? ' · ' + active.join(', ') : ''}`;
 }
 
 // -- markup pieces ----------------------------------------------------------
@@ -200,7 +199,7 @@ function footer() {
       </div>
       <div>
         <div style="font-size:11px;letter-spacing:.14em;text-transform:uppercase;color:rgba(255,255,255,.4);font-family:'Archivo',sans-serif;font-weight:600;margin-bottom:12px">Shipping</div>
-        <div style="font-size:14px;color:rgba(255,255,255,.6);line-height:1.7">Ships from the USA<br/>Worldwide via UPS<br/>22 × 30 in · ~12 lb</div>
+        <div style="font-size:14px;color:rgba(255,255,255,.6);line-height:1.7">Ships from the USA<br/>Worldwide via UPS<br/>22 × 32 in · ~12 lb</div>
       </div>
       <div>
         <div style="font-size:11px;letter-spacing:.14em;text-transform:uppercase;color:rgba(255,255,255,.4);font-family:'Archivo',sans-serif;font-weight:600;margin-bottom:12px">Info</div>
@@ -275,7 +274,7 @@ function homeScreen() {
           <span style="width:6px;height:6px;border-radius:50%;background:#1f6b4f"></span>Made to order · ships from the USA
         </div>
         <h1 style="font-family:'Archivo',sans-serif;font-weight:800;font-size:52px;line-height:.98;letter-spacing:-.032em;margin:18px 0 0;text-wrap:pretty">Custom soccer card display case</h1>
-        <p style="font-size:16.5px;line-height:1.55;color:rgba(0,0,0,.62);margin:16px 0 0;max-width:44ch">Your club, your stadium, your eleven. Eleven graded slabs mounted in formation behind UV acrylic, in a hinged black frame built to hang or stand.</p>
+        <p style="font-size:16.5px;line-height:1.55;color:rgba(0,0,0,.62);margin:16px 0 0;max-width:44ch">Your club, your stadium, your eleven. Eleven graded slabs mounted behind UV acrylic, in a hinged black frame built to hang or stand.</p>
 
         <div style="display:flex;align-items:flex-end;gap:16px;margin:28px 0 0">
           <div style="font-family:'Archivo',sans-serif;font-weight:800;font-size:40px;letter-spacing:-.03em;line-height:1">${money(CURRENCIES[state.cur].price)}</div>
@@ -286,19 +285,20 @@ function homeScreen() {
         <div style="display:grid;grid-template-columns:1fr 1fr;gap:1px;background:rgba(0,0,0,.08);border:1px solid rgba(0,0,0,.08);border-radius:14px;overflow:hidden;margin:28px 0 0">${specsHtml}</div>
 
         <div style="display:flex;gap:12px;margin-top:26px">
-          <button
-            data-action="nav" data-screen="customize" class="btn-primary"
-            ${soldOut() ? 'disabled' : ''}
-            style="flex:1;color:#fff;border:0;border-radius:12px;padding:19px 26px;font-size:15.5px;font-weight:500;cursor:${soldOut() ? 'not-allowed' : 'pointer'};display:flex;align-items:center;justify-content:center;gap:10px;opacity:${soldOut() ? '.5' : '1'}"
-          >${soldOut() ? 'Sold out' : 'Start your custom order'} ${soldOut() ? '' : '<span style="font-size:17px">→</span>'}</button>
+          ${
+            soldOut()
+              ? `<span class="btn-primary" aria-disabled="true" style="flex:1;color:#fff;border:0;border-radius:12px;padding:19px 26px;font-size:15.5px;font-weight:500;cursor:not-allowed;display:flex;align-items:center;justify-content:center;gap:10px;opacity:.5">Sold out</span>`
+              : `<a href="https://buy.stripe.com/cNi14p6W78f8bWFcpJ7g402" class="btn-primary" style="flex:1;color:#fff;border-radius:12px;padding:19px 26px;font-size:15.5px;font-weight:500;display:flex;align-items:center;justify-content:center;gap:10px">Start your custom order <span style="font-size:17px">→</span></a>`
+          }
           <a href="https://instagram.com/pitchsidedisplays" target="_blank" rel="noopener" style="border:1px solid rgba(0,0,0,.14);border-radius:12px;padding:19px 22px;font-size:15px;color:#12120f;display:flex;align-items:center">See it on IG</a>
         </div>
+        <div style="margin-top:14px;font-size:12.5px;color:rgba(0,0,0,.5);line-height:1.5">Shipping within the US. International enquiries — contact us at <a href="mailto:pitchsidedisplays@gmail.com" style="color:rgba(0,0,0,.5)">pitchsidedisplays@gmail.com</a> for a shipping quote.</div>
         <div style="margin-top:22px;border:1px solid rgba(179,38,30,.28);background:rgba(179,38,30,.05);border-radius:14px;padding:16px 18px">
           <div style="font-family:'Archivo',sans-serif;font-weight:800;font-size:15px;letter-spacing:-.01em;color:#b3261e">${esc(stockLine())}</div>
-          <div style="margin-top:8px;font-size:12.5px;color:rgba(0,0,0,.55);line-height:1.5">${soldOut() ? "This batch has sold out. The next one opens in January." : "Each batch is built by hand. When it's gone, the next one opens in January."}</div>
+          <div style="margin-top:8px;font-size:12.5px;color:rgba(0,0,0,.55);line-height:1.5">${soldOut() ? 'This batch has sold out. Once all current orders are completed, the next batch will open for new orders.' : 'Each batch is built by hand. Once all current orders are completed, the next batch will open for new orders.'}</div>
         </div>
         <div style="margin-top:14px;display:flex;gap:14px;font-size:13px;color:rgba(0,0,0,.5)">
-          <span>4–6 week build</span><span>·</span><span>Ships from the USA</span><span>·</span><span>Tracked UPS delivery</span>
+          <span>10-14 day build</span><span>·</span><span>Ships from the USA</span><span>·</span><span>Tracked UPS delivery</span>
         </div>
       </div>
     </section>
@@ -306,7 +306,7 @@ function homeScreen() {
     <section ${revealAttrs('home-steps')} style="border-top:1px solid rgba(0,0,0,.08);background:#fff">
       <div style="max-width:1240px;margin:0 auto;padding:64px 32px">
         <h2 style="font-family:'Archivo',sans-serif;font-weight:700;font-size:13px;letter-spacing:.16em;text-transform:uppercase;color:rgba(0,0,0,.45);margin:0 0 34px">How it works</h2>
-        <div style="display:grid;grid-template-columns:repeat(4,1fr);gap:36px">${stepsHtml}</div>
+        <div style="display:grid;grid-template-columns:repeat(3,1fr);gap:36px">${stepsHtml}</div>
       </div>
     </section>
 
@@ -331,26 +331,30 @@ function homeScreen() {
         <div>
           <h2 style="font-family:'Archivo',sans-serif;font-weight:700;font-size:13px;letter-spacing:.16em;text-transform:uppercase;color:rgba(0,0,0,.45);margin:0">See it in the room</h2>
           <div style="font-family:'Archivo',sans-serif;font-weight:800;font-size:34px;line-height:1.08;letter-spacing:-.03em;margin:14px 0 0">The same case, on an actual wall</div>
-          <p style="font-size:15.5px;line-height:1.6;color:rgba(0,0,0,.6);margin:16px 0 0;max-width:42ch">No renders. This is the 22 × 30 in case from the gallery — hinge open, hinge closed, mounted above a mantel at true scale.</p>
+          <p style="font-size:15.5px;line-height:1.6;color:rgba(0,0,0,.6);margin:16px 0 0;max-width:42ch">No renders. This is the 22 × 32 in case from the gallery — hinge open, hinge closed, mounted above a mantel at true scale.</p>
           <div style="margin-top:26px;display:flex;flex-direction:column;gap:14px">
             <div style="border-top:1px solid rgba(0,0,0,.1);padding-top:14px">
               <div style="font-family:'Archivo',sans-serif;font-weight:700;font-size:14px">Hinged front</div>
               <div style="font-size:13.5px;color:rgba(0,0,0,.55);margin-top:3px">Swap slabs without unmounting the case</div>
             </div>
             <div style="border-top:1px solid rgba(0,0,0,.1);padding-top:14px">
-              <div style="font-family:'Archivo',sans-serif;font-weight:700;font-size:14px">22 × 30 in</div>
+              <div style="font-family:'Archivo',sans-serif;font-weight:700;font-size:14px">22 × 32 in</div>
               <div style="font-size:13.5px;color:rgba(0,0,0,.55);margin-top:3px">Shown here at true size on a standard mantel</div>
+            </div>
+            <div style="border-top:1px solid rgba(0,0,0,.1);padding-top:14px">
+              <div style="font-family:'Archivo',sans-serif;font-weight:700;font-size:14px">20 lb boxed</div>
+              <div style="font-size:13.5px;color:rgba(0,0,0,.55);margin-top:3px">Packed weight, shipped insured</div>
             </div>
             <div style="border-top:1px solid rgba(0,0,0,.1);padding-top:14px">
               <div style="font-family:'Archivo',sans-serif;font-weight:700;font-size:14px">UV acrylic</div>
               <div style="font-size:13.5px;color:rgba(0,0,0,.55);margin-top:3px">Cuts glare under direct light</div>
             </div>
           </div>
-          <button
-            data-action="nav" data-screen="customize" class="btn-primary"
-            ${soldOut() ? 'disabled' : ''}
-            style="margin-top:28px;color:#fff;border:0;border-radius:12px;padding:16px 24px;font-size:14.5px;font-weight:500;cursor:${soldOut() ? 'not-allowed' : 'pointer'};opacity:${soldOut() ? '.5' : '1'}"
-          >${soldOut() ? 'Sold out' : 'Start your custom order'}</button>
+          ${
+            soldOut()
+              ? `<span class="btn-primary" aria-disabled="true" style="display:inline-block;margin-top:28px;color:#fff;border:0;border-radius:12px;padding:16px 24px;font-size:14.5px;font-weight:500;cursor:not-allowed;opacity:.5">Sold out</span>`
+              : `<a href="https://buy.stripe.com/cNi14p6W78f8bWFcpJ7g402" class="btn-primary" style="display:inline-block;margin-top:28px;color:#fff;border-radius:12px;padding:16px 24px;font-size:14.5px;font-weight:500">Start your custom order</a>`
+          }
         </div>
       </div>
     </section>
@@ -421,14 +425,6 @@ function customizeScreen() {
       </div>
 
       <div style="display:flex;flex-direction:column;gap:20px">
-        <div style="background:#fff;border:1px solid rgba(0,0,0,.08);border-radius:16px;padding:24px;display:flex;align-items:center;justify-content:space-between;gap:20px">
-          <div>
-            <div style="font-family:'Archivo',sans-serif;font-weight:700;font-size:12px;letter-spacing:.14em;text-transform:uppercase;color:rgba(0,0,0,.45)">Formation</div>
-            <div style="font-size:13.5px;color:rgba(0,0,0,.55);margin-top:7px;line-height:1.5">Every case is laid out 4-3-3 across eleven slots. Want a different shape? Note it below.</div>
-          </div>
-          <div style="font-family:'Archivo',sans-serif;font-weight:800;font-size:26px;letter-spacing:.02em;background:#12120f;color:#fff;border-radius:12px;padding:14px 22px;flex:none">${state.formation}</div>
-        </div>
-
         <div style="background:#fff;border:1px solid rgba(0,0,0,.08);border-radius:16px;padding:24px;display:grid;grid-template-columns:1fr 1fr;gap:18px">
           <div>
             <label style="display:block;font-size:12.5px;font-weight:500;margin-bottom:7px">Club</label>
@@ -449,7 +445,7 @@ function customizeScreen() {
         </div>
 
         <div style="background:#fff;border:1px solid rgba(0,0,0,.08);border-radius:16px;padding:24px">
-          <div style="display:flex;justify-content:space-between;font-size:14.5px;padding-bottom:12px;border-bottom:1px solid rgba(0,0,0,.08)"><span style="color:rgba(0,0,0,.55)">Custom display case, 22 × 30 in</span><span>${money(price)}</span></div>
+          <div style="display:flex;justify-content:space-between;font-size:14.5px;padding-bottom:12px;border-bottom:1px solid rgba(0,0,0,.08)"><span style="color:rgba(0,0,0,.55)">Custom display case, 22 × 32 in</span><span>${money(price)}</span></div>
           <div style="display:flex;justify-content:space-between;font-size:14.5px;padding:12px 0;border-bottom:1px solid rgba(0,0,0,.08)"><span style="color:rgba(0,0,0,.55)">${esc(configLine())}</span><span style="color:rgba(0,0,0,.45)">Included</span></div>
           <div style="display:flex;justify-content:space-between;align-items:baseline;padding-top:16px">
             <span style="font-family:'Archivo',sans-serif;font-weight:700;font-size:18px">Total</span>
@@ -532,7 +528,7 @@ function checkoutScreen() {
           <span style="font-family:'Archivo',sans-serif;font-weight:800;font-size:24px;letter-spacing:-.02em">${totalLabel}</span>
         </div>
         <button class="btn-primary" style="width:100%;margin-top:18px;color:#fff;border:0;border-radius:12px;padding:18px;font-size:15.5px;font-weight:500;cursor:pointer">Pay ${totalLabel}</button>
-        <div style="margin-top:14px;font-size:12.5px;color:rgba(0,0,0,.5);line-height:1.6">Ships from the USA, 22 × 30 in and ~12 lb boxed · US delivery 3–5 days after build · tracked</div>
+        <div style="margin-top:14px;font-size:12.5px;color:rgba(0,0,0,.5);line-height:1.6">Ships from the USA, 22 × 32 in and ~12 lb boxed · US delivery 3–5 days after build · tracked</div>
       </div>
     </div>
   </main>`;
